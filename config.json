@@ -1,0 +1,16 @@
+{
+  "symbols": {
+    "SILVERM": {
+      "source": "mcx",
+      "expiries": ["18FEB2026"]
+    },
+    "GOLDM": {
+      "source": "mcx",
+      "expiries": []
+    },
+    "NIFTY": {
+      "source": "nse",
+      "expiries": []
+    }
+  }
+}

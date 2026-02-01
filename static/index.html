@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f2c3a" />
+    <meta name="description" content="Live option chain dashboard for MCX commodities." />
+    <title>Option Chain Hub</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="background">
+      <div class="orb orb--one"></div>
+      <div class="orb orb--two"></div>
+      <div class="orb orb--three"></div>
+    </div>
+
+    <main class="shell">
+      <header class="hero hero--compact">
+        <h1>Option Chain Hub</h1>
+        <div class="hero-status">
+          <span class="dot"></span>
+          <span id="lastUpdated">Not fetched yet</span>
+          <span class="divider">•</span>
+          <span>Rows <strong id="rowCount">0</strong></span>
+          <span class="divider">•</span>
+          <span>Cache <strong id="cacheStatus">Idle</strong></span>
+        </div>
+      </header>
+
+      <section class="table-card">
+        <div class="table-head">
+          <div class="table-title">
+            <h2>Chain Snapshot</h2>
+            <span class="pill" id="exchangePill">MCX</span>
+          </div>
+          <div class="table-filters">
+            <div class="control-group compact">
+              <label for="symbol">Symbol</label>
+              <select id="symbol"></select>
+            </div>
+            <div class="control-group compact">
+              <label for="expiry">Expiry</label>
+              <select id="expiry"></select>
+            </div>
+            <div class="control-group compact">
+              <label for="strikeStep">Strike step</label>
+              <select id="strikeStep">
+                <option value="5000">5,000</option>
+                <option value="100">100</option>
+                <option value="50">50</option>
+              </select>
+            </div>
+            <div class="table-actions">
+              <button id="fetchBtn" class="icon-btn primary" title="Fetch" aria-label="Fetch">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3v9m0 0l4-4m-4 4l-4-4" />
+                  <path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" />
+                </svg>
+              </button>
+              <button id="refreshBtn" class="icon-btn ghost" title="Force refresh" aria-label="Force refresh">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 12a9 9 0 0114.78-6.78L21 8" />
+                  <path d="M21 3v5h-5" />
+                  <path d="M21 12a9 9 0 01-14.78 6.78L3 16" />
+                  <path d="M3 21v-5h5" />
+                </svg>
+              </button>
+              <button id="exportBtn" class="icon-btn accent" title="Export CSV" aria-label="Export CSV">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v10m0 0l4-4m-4 4l-4-4" />
+                  <path d="M4 19h16" />
+                </svg>
+              </button>
+              <button id="copyBtn" class="icon-btn ghost" title="Copy live link" aria-label="Copy live link">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M10 13a4 4 0 010-6l2-2a4 4 0 016 6l-1 1" />
+                  <path d="M14 11a4 4 0 010 6l-2 2a4 4 0 01-6-6l1-1" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="table-meta">
+          <label class="toggle inline">
+            <input id="autoRefresh" type="checkbox" checked />
+            <span>Auto refresh every 10 minutes</span>
+          </label>
+          <p id="status" class="status">Ready.</p>
+        </div>
+        <div class="table-wrap">
+          <table id="chainTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
