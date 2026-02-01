@@ -325,6 +325,7 @@ h1 {
   border-bottom: 1px solid rgba(15, 44, 58, 0.12);
   text-align: right;
   scroll-snap-align: center;
+  white-space: nowrap;
 }
 
 #chainTable th:first-child,
@@ -348,6 +349,7 @@ h1 {
   background: var(--strike-bg);
   font-weight: 700;
   text-align: center;
+  min-width: 110px;
 }
 
 #chainTable th.put-ltp-col,
@@ -356,6 +358,7 @@ h1 {
   background: rgba(181, 82, 43, 0.12);
   font-weight: 700;
   text-align: center;
+  min-width: 110px;
 }
 
 #chainTable th.call-ltp-col,
@@ -364,6 +367,7 @@ h1 {
   background: rgba(31, 111, 132, 0.14);
   font-weight: 700;
   text-align: center;
+  min-width: 110px;
 }
 
 #chainTable th.ltp-col,
@@ -410,7 +414,7 @@ h1 {
   }
 
   #chainTable {
-    min-width: 980px;
+    min-width: 1080px;
     border-collapse: separate;
     border-spacing: 0;
     table-layout: fixed;
@@ -424,7 +428,7 @@ h1 {
 
   #chainTable th.strike-col,
   #chainTable td.strike-col {
-    min-width: 90px;
+    min-width: 110px;
     position: relative;
     left: auto;
     z-index: 1;
@@ -433,7 +437,16 @@ h1 {
 
   #chainTable th.put-ltp-col,
   #chainTable td.put-ltp-col {
-    min-width: 90px;
+    min-width: 110px;
+    position: relative;
+    left: auto;
+    z-index: 1;
+    box-shadow: none;
+  }
+
+  #chainTable th.call-ltp-col,
+  #chainTable td.call-ltp-col {
+    min-width: 110px;
     position: relative;
     left: auto;
     z-index: 1;
