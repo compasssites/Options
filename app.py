@@ -301,6 +301,75 @@ def option_chain_lite(
     )
 
 
+@app.get("/api/option-chain-pretty")
+def option_chain_pretty(
+    symbol: str,
+    expiry: Optional[str] = None,
+    format: str = "json",
+    strike_step: Optional[float] = Query(None, ge=0),
+    all_strikes: bool = False,
+    force: bool = False,
+    download: bool = False,
+    limit: Optional[int] = Query(None, ge=1),
+    offset: Optional[int] = Query(None, ge=0),
+    mode: Optional[str] = None,
+    window: int = Query(7, ge=0),
+    token: Optional[str] = None,
+    x_api_token: Optional[str] = Header(None),
+) -> Response:
+    return option_chain(
+        symbol=symbol,
+        expiry=expiry,
+        format=format,
+        strike_step=strike_step,
+        all_strikes=all_strikes,
+        force=force,
+        download=download,
+        pretty=True,
+        limit=limit,
+        offset=offset,
+        mode=mode,
+        window=window,
+        lite=False,
+        token=token,
+        x_api_token=x_api_token,
+    )
+
+
+@app.get("/api/option-chain-chat")
+def option_chain_chat(
+    symbol: str,
+    expiry: Optional[str] = None,
+    format: str = "json",
+    strike_step: Optional[float] = Query(None, ge=0),
+    all_strikes: bool = False,
+    force: bool = False,
+    download: bool = False,
+    limit: Optional[int] = Query(None, ge=1),
+    offset: Optional[int] = Query(None, ge=0),
+    window: int = Query(10, ge=0),
+    token: Optional[str] = None,
+    x_api_token: Optional[str] = Header(None),
+) -> Response:
+    return option_chain(
+        symbol=symbol,
+        expiry=expiry,
+        format=format,
+        strike_step=strike_step,
+        all_strikes=all_strikes,
+        force=force,
+        download=download,
+        pretty=True,
+        limit=limit,
+        offset=offset,
+        mode="atm_window",
+        window=window,
+        lite=True,
+        token=token,
+        x_api_token=x_api_token,
+    )
+
+
 @app.post("/api/refresh")
 def refresh(
     symbol: str,

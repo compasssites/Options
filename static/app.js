@@ -248,12 +248,12 @@ function exportCsv() {
 }
 
 async function copyLink() {
-  const params = buildParams({ format: "json" });
-  const url = `${window.location.origin}/api/option-chain?${toQuery(params)}`;
+  const params = buildParams({ format: "json", window: "10" });
+  const url = `${window.location.origin}/api/option-chain-chat?${toQuery(params)}`;
   try {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(url);
-      setStatus("Live JSON link copied.");
+      setStatus("Live chat-friendly link copied.");
       return;
     }
     const textarea = document.createElement("textarea");
@@ -266,7 +266,7 @@ async function copyLink() {
     const ok = document.execCommand("copy");
     document.body.removeChild(textarea);
     if (ok) {
-      setStatus("Live JSON link copied.");
+      setStatus("Live chat-friendly link copied.");
       return;
     }
     throw new Error("Clipboard blocked");

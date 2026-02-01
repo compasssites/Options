@@ -48,6 +48,8 @@ If `expiry` is not provided, the app uses the first configured expiry for the sy
 - `GET /api/expiries?symbol=SILVERM`
 - `GET /api/option-chain?symbol=SILVERM&expiry=18FEB2026&format=csv`
 - `POST /api/refresh?symbol=SILVERM&expiry=18FEB2026`
+- `GET /api/option-chain-pretty?symbol=SILVERM&expiry=18FEB2026`
+- `GET /api/option-chain-chat?symbol=SILVERM&expiry=18FEB2026`
 
 ## Notes
 
