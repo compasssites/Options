@@ -174,6 +174,7 @@ def option_chain(
     refresh: bool = False,
     download: bool = False,
     pretty: bool = False,
+    as_text: bool = False,
     limit: Optional[int] = Query(None, ge=1),
     offset: Optional[int] = Query(None, ge=0),
     mode: Optional[str] = None,
@@ -284,7 +285,7 @@ def option_chain(
             headers={"Content-Disposition": "inline", "Cache-Control": "no-store"},
         )
 
-    if format.lower() in ("text", "prettytext", "plain"):
+    if as_text or format.lower() in ("text", "prettytext", "plain"):
         json_text = json.dumps(payload, ensure_ascii=False, indent=2)
         return Response(
             content=json_text,
