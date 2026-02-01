@@ -302,6 +302,7 @@ h1 {
 .table-wrap {
   max-height: 580px;
   overflow: auto;
+  position: relative;
 }
 
 #chainTable {
@@ -323,6 +324,7 @@ h1 {
   padding: 10px 12px;
   border-bottom: 1px solid rgba(15, 44, 58, 0.12);
   text-align: right;
+  scroll-snap-align: center;
 }
 
 #chainTable th:first-child,
@@ -352,6 +354,14 @@ h1 {
 #chainTable td.put-ltp-col {
   color: var(--put);
   background: rgba(181, 82, 43, 0.12);
+  font-weight: 700;
+  text-align: center;
+}
+
+#chainTable th.call-ltp-col,
+#chainTable td.call-ltp-col {
+  color: var(--call);
+  background: rgba(31, 111, 132, 0.14);
   font-weight: 700;
   text-align: center;
 }
@@ -395,10 +405,21 @@ h1 {
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x pan-y;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 16px;
   }
 
   #chainTable {
     min-width: 980px;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+  }
+
+  #chainTable th,
+  #chainTable td {
+    backface-visibility: hidden;
+    transform: translateZ(0);
   }
 
   #chainTable th.strike-col,

@@ -222,6 +222,9 @@ function applyColumnClasses(cell, header) {
   if (header === "PUT_LTP") {
     cell.classList.add("put-ltp-col");
   }
+  if (header === "CALL_LTP") {
+    cell.classList.add("call-ltp-col");
+  }
   if (header === "CALL_LTP" || header === "PUT_LTP" || header === "Strike_Price") {
     cell.classList.add("ltp-col");
   }
