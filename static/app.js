@@ -248,7 +248,7 @@ function exportCsv() {
 }
 
 async function copyLink() {
-  const params = buildParams({ format: "json", window: "10" });
+  const params = buildParams({ format: "ndjson", window: "10" });
   const url = `${window.location.origin}/api/option-chain-chat?${toQuery(params)}`;
   try {
     if (navigator.clipboard && window.isSecureContext) {

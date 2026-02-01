@@ -340,7 +340,7 @@ def option_chain_pretty(
 def option_chain_chat(
     symbol: str,
     expiry: Optional[str] = None,
-    format: str = "json",
+    format: str = "ndjson",
     strike_step: Optional[float] = Query(None, ge=0),
     all_strikes: bool = False,
     force: bool = False,
