@@ -311,6 +311,9 @@ def fetch_mcx_option_chain(symbol: str, expiry: Optional[str]) -> List[Dict[str,
             "User-Agent": USER_AGENT,
             "Accept": "application/json, text/javascript, */*; q=0.01",
             "X-Requested-With": "XMLHttpRequest",
+            "Accept-Language": "en-GB,en;q=0.9",
+            "Referer": "https://www.mcxindia.com/market-data/option-chain",
+            "Origin": "https://www.mcxindia.com",
         }
     )
 
@@ -322,7 +325,19 @@ def fetch_mcx_option_chain(symbol: str, expiry: Optional[str]) -> List[Dict[str,
         json=payload,
         timeout=20,
     )
-    resp.raise_for_status()
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError as exc:
+        status = exc.response.status_code if exc.response is not None else None
+        if status in (401, 403):
+            fallback_rows = fetch_mcx_option_chain_from_marketwatch(symbol, expiry)
+            if fallback_rows:
+                return fallback_rows
+            raise HTTPException(
+                status_code=502,
+                detail="MCX option chain blocked (403). MarketWatch fallback returned no rows.",
+            ) from exc
+        raise
 
     data: Any = resp.json()
     if isinstance(data, dict) and "d" in data:
@@ -334,6 +349,45 @@ def fetch_mcx_option_chain(symbol: str, expiry: Optional[str]) -> List[Dict[str,
             pass
 
     return extract_rows(data)
+
+
+def fetch_mcx_option_chain_from_marketwatch(symbol: str, expiry: Optional[str]) -> List[Dict[str, Any]]:
+    rows = get_marketwatch_rows()
+    symbol = symbol.upper().strip()
+    expiry = expiry or None
+
+    chain: Dict[float, Dict[str, Any]] = {}
+    for item in rows:
+        if not isinstance(item, dict):
+            continue
+        if item.get("Symbol") != symbol and item.get("ProductCode") != symbol:
+            continue
+        if expiry and str(item.get("ExpiryDate")) != str(expiry):
+            continue
+        opt_type = (item.get("OptionType") or "").upper()
+        if opt_type not in ("CE", "PE"):
+            continue
+        strike = item.get("StrikePrice")
+        if strike is None:
+            continue
+        try:
+            strike_key = float(strike)
+        except (TypeError, ValueError):
+            continue
+        entry = chain.setdefault(strike_key, {"CE_StrikePrice": strike})
+        prefix = "CE_" if opt_type == "CE" else "PE_"
+        entry[f"{prefix}OpenInterest"] = item.get("OpenInterest", "")
+        entry[f"{prefix}ChangeInOI"] = item.get("ChangeInOI", item.get("ChangeInOpenInterest", ""))
+        entry[f"{prefix}Volume"] = item.get("Volume", "")
+        entry[f"{prefix}AbsoluteChange"] = item.get("AbsoluteChange", "")
+        entry[f"{prefix}BidQty"] = item.get("BuyQuantity", "")
+        entry[f"{prefix}BidPrice"] = item.get("BuyPrice", "")
+        entry[f"{prefix}AskPrice"] = item.get("SellPrice", "")
+        entry[f"{prefix}AskQty"] = item.get("SellQuantity", "")
+        entry[f"{prefix}LTP"] = item.get("LTP", "")
+
+    sorted_strikes = sorted(chain.keys())
+    return [chain[strike] for strike in sorted_strikes]
 
 
 def fetch_nse_option_chain(symbol: str, expiry: Optional[str], force: bool = False) -> List[Dict[str, Any]]:
