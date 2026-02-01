@@ -324,7 +324,6 @@ h1 {
   padding: 10px 12px;
   border-bottom: 1px solid rgba(15, 44, 58, 0.12);
   text-align: right;
-  scroll-snap-align: center;
   white-space: nowrap;
 }
 
@@ -409,12 +408,10 @@ h1 {
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x pan-y;
-    scroll-snap-type: x mandatory;
-    scroll-padding: 16px;
   }
 
   #chainTable {
-    min-width: 1080px;
+    min-width: 1140px;
     border-collapse: separate;
     border-spacing: 0;
     table-layout: fixed;
@@ -422,8 +419,14 @@ h1 {
 
   #chainTable th,
   #chainTable td {
-    backface-visibility: hidden;
-    transform: translateZ(0);
+    backface-visibility: visible;
+    transform: none;
+  }
+
+  #chainTable th {
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: normal;
   }
 
   #chainTable th.strike-col,
