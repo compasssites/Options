@@ -1,8 +1,8 @@
-const CACHE_NAME = "option-chain-v1";
+const CACHE_NAME = "option-chain-v2";
 const STATIC_ASSETS = [
   "/",
-  "/static/styles.css",
-  "/static/app.js",
+  "/static/styles.css?v=20260201",
+  "/static/app.js?v=20260201",
   "/manifest.webmanifest",
   "/static/icons/icon-192.svg",
   "/static/icons/icon-512.svg",
