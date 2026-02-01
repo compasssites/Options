@@ -618,7 +618,8 @@ def get_mcx_expiries(symbol: str) -> List[str]:
             continue
         expiries[expiry_dt] = expiry_value
     sorted_expiries = [expiries[key] for key in sorted(expiries.keys())]
-    return sorted_expiries[:3]
+    limit = 4 if symbol in {"SILVERM", "GOLDM"} else 3
+    return sorted_expiries[:limit]
 
 
 def extract_rows(data: Any) -> List[Dict[str, Any]]:
