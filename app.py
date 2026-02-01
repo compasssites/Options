@@ -261,7 +261,11 @@ def option_chain(
         for row in rows_payload:
             lines.append(json.dumps(row, ensure_ascii=False))
         content = "\n".join(lines) + "\n"
-        return Response(content=content, media_type="application/x-ndjson")
+        return Response(
+            content=content,
+            media_type="text/plain; charset=utf-8",
+            headers={"Content-Disposition": "inline"},
+        )
 
     json_text = json.dumps(payload, ensure_ascii=False, indent=2 if pretty else None)
     return Response(content=json_text, media_type="application/json")
