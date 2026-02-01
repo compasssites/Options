@@ -205,6 +205,8 @@ function updateTable(rows) {
     });
     tbody.appendChild(tr);
   });
+
+  requestAnimationFrame(() => centerKeyColumns());
 }
 
 function applyColumnClasses(cell, header) {
@@ -223,6 +225,32 @@ function applyColumnClasses(cell, header) {
   if (header === "CALL_LTP" || header === "PUT_LTP" || header === "Strike_Price") {
     cell.classList.add("ltp-col");
   }
+}
+
+function centerKeyColumns() {
+  if (window.innerWidth > 960) {
+    return;
+  }
+  const container = document.querySelector(".table-wrap");
+  if (!container) {
+    return;
+  }
+  const strike = container.querySelector("th.strike-col");
+  const put = container.querySelector("th.put-ltp-col");
+  if (!strike || !put) {
+    return;
+  }
+
+  const containerRect = container.getBoundingClientRect();
+  const strikeRect = strike.getBoundingClientRect();
+  const putRect = put.getBoundingClientRect();
+
+  const strikeCenter = strikeRect.left - containerRect.left + container.scrollLeft + strikeRect.width / 2;
+  const putCenter = putRect.left - containerRect.left + container.scrollLeft + putRect.width / 2;
+  const targetCenter = (strikeCenter + putCenter) / 2;
+
+  const desiredScrollLeft = Math.max(0, targetCenter - container.clientWidth / 2);
+  container.scrollLeft = desiredScrollLeft;
 }
 
 async function loadData({ force = false } = {}) {

@@ -403,19 +403,19 @@ h1 {
 
   #chainTable th.strike-col,
   #chainTable td.strike-col {
-    position: sticky;
-    left: calc(50vw - 90px);
     min-width: 90px;
-    z-index: 3;
-    box-shadow: -6px 0 12px rgba(15, 44, 58, 0.08), 6px 0 12px rgba(15, 44, 58, 0.08);
+    position: relative;
+    left: auto;
+    z-index: 1;
+    box-shadow: none;
   }
 
   #chainTable th.put-ltp-col,
   #chainTable td.put-ltp-col {
-    position: sticky;
-    left: 50vw;
     min-width: 90px;
-    z-index: 4;
-    box-shadow: 6px 0 12px rgba(15, 44, 58, 0.08);
+    position: relative;
+    left: auto;
+    z-index: 1;
+    box-shadow: none;
   }
 }
