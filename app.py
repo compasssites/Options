@@ -379,7 +379,7 @@ def option_chain_chat(
     download: bool = False,
     limit: Optional[int] = Query(None, ge=1),
     offset: Optional[int] = Query(None, ge=0),
-    window: int = Query(10, ge=0),
+    window: int = Query(60, ge=0),
     token: Optional[str] = None,
     x_api_token: Optional[str] = Header(None),
 ) -> Response:

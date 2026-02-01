@@ -217,6 +217,9 @@ function applyColumnClasses(cell, header) {
   if (header === "Strike_Price") {
     cell.classList.add("strike-col");
   }
+  if (header === "PUT_LTP") {
+    cell.classList.add("put-ltp-col");
+  }
   if (header === "CALL_LTP" || header === "PUT_LTP" || header === "Strike_Price") {
     cell.classList.add("ltp-col");
   }
@@ -248,7 +251,7 @@ function exportCsv() {
 }
 
 async function copyLink() {
-  const params = buildParams({ format: "json", pretty: "1", as_text: "1", window: "12" });
+  const params = buildParams({ format: "json", pretty: "1", as_text: "1", window: "60" });
   const url = `${window.location.origin}/api/option-chain?${toQuery(params)}`;
   try {
     if (navigator.clipboard && window.isSecureContext) {

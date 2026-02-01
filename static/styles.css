@@ -348,6 +348,14 @@ h1 {
   text-align: center;
 }
 
+#chainTable th.put-ltp-col,
+#chainTable td.put-ltp-col {
+  color: var(--put);
+  background: rgba(181, 82, 43, 0.12);
+  font-weight: 700;
+  text-align: center;
+}
+
 #chainTable th.ltp-col,
 #chainTable td.ltp-col {
   text-align: center;
@@ -380,5 +388,34 @@ h1 {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+  }
+
+  #chainTable {
+    min-width: 980px;
+  }
+
+  #chainTable th.strike-col,
+  #chainTable td.strike-col {
+    position: sticky;
+    left: calc(50vw - 90px);
+    min-width: 90px;
+    z-index: 3;
+    box-shadow: -6px 0 12px rgba(15, 44, 58, 0.08), 6px 0 12px rgba(15, 44, 58, 0.08);
+  }
+
+  #chainTable th.put-ltp-col,
+  #chainTable td.put-ltp-col {
+    position: sticky;
+    left: 50vw;
+    min-width: 90px;
+    z-index: 4;
+    box-shadow: 6px 0 12px rgba(15, 44, 58, 0.08);
   }
 }
