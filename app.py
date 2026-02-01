@@ -260,7 +260,8 @@ def option_chain(
         lines = [json.dumps({k: payload[k] for k in payload if k != "rows"}, ensure_ascii=False)]
         for row in rows_payload:
             lines.append(json.dumps(row, ensure_ascii=False))
-        content = "\n".join(lines) + "\n"
+        line_sep = "\r\n"
+        content = line_sep.join(lines) + line_sep
         return Response(
             content=content,
             media_type="text/plain; charset=utf-8",
