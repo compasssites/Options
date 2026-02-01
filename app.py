@@ -67,6 +67,34 @@ OUTPUT_HEADERS = [
     "PUT_OI_Lots",
 ]
 
+LITE_HEADERS = [
+    "strike",
+    "ce_ltp",
+    "ce_bid",
+    "ce_ask",
+    "ce_oi",
+    "ce_volume",
+    "pe_ltp",
+    "pe_bid",
+    "pe_ask",
+    "pe_oi",
+    "pe_volume",
+]
+
+LITE_MAP = {
+    "strike": "Strike_Price",
+    "ce_ltp": "CALL_LTP",
+    "ce_bid": "CALL_Bid_Price",
+    "ce_ask": "CALL_Ask_Price",
+    "ce_oi": "CALL_OI_Lots",
+    "ce_volume": "CALL_Volume",
+    "pe_ltp": "PUT_LTP",
+    "pe_bid": "PUT_Bid_Price",
+    "pe_ask": "PUT_Ask_Price",
+    "pe_oi": "PUT_OI_Lots",
+    "pe_volume": "PUT_Volume",
+}
+
 _DATE_RE = re.compile(r"^/Date\(([-+]?\d+)([+-]\d{4})?\)/$")
 
 CACHE: Dict[str, Dict[str, Any]] = {}
@@ -144,6 +172,12 @@ def option_chain(
     all_strikes: bool = False,
     force: bool = False,
     download: bool = False,
+    pretty: bool = False,
+    limit: Optional[int] = Query(None, ge=1),
+    offset: Optional[int] = Query(None, ge=0),
+    mode: Optional[str] = None,
+    window: int = Query(7, ge=0),
+    lite: bool = False,
     token: Optional[str] = None,
     x_api_token: Optional[str] = Header(None),
 ) -> Response:
@@ -182,11 +216,21 @@ def option_chain(
     )
 
     last_updated = datetime.fromtimestamp(fetched_at, tz=IST).isoformat(sep=" ", timespec="seconds")
+    server_ts = datetime.now(tz=IST).isoformat(sep=" ", timespec="seconds")
+    age_ms = int((time.time() - fetched_at) * 1000)
+    underlying = get_underlying_value(rows)
+
+    rows = sort_rows_by_strike(rows)
+    if mode == "atm_window":
+        rows = filter_atm_window(rows, underlying, window)
+    rows = apply_offset_limit(rows, offset, limit)
 
     output_rows = to_output_rows(rows)
+    rows_payload = to_lite_rows(output_rows) if lite else output_rows
 
     if format.lower() == "csv":
-        csv_text = to_csv(output_rows)
+        headers = LITE_HEADERS if lite else OUTPUT_HEADERS
+        csv_text = to_csv(rows_payload, headers)
         filename = f"{symbol}_{expiry or 'LATEST'}_option_chain.csv"
         disposition = "attachment" if download else "inline"
         return Response(
@@ -202,10 +246,59 @@ def option_chain(
         "symbol": symbol,
         "expiry": expiry,
         "last_updated": last_updated,
-        "count": len(output_rows),
-        "rows": output_rows,
+        "server_ts": server_ts,
+        "source_ts": last_updated,
+        "age_ms": age_ms,
+        "underlying": underlying,
+        "count": len(rows_payload),
+        "rows": rows_payload,
     }
-    return Response(content=json.dumps(payload), media_type="application/json")
+
+    if format.lower() == "ndjson":
+        lines = [json.dumps({k: payload[k] for k in payload if k != "rows"}, ensure_ascii=False)]
+        for row in rows_payload:
+            lines.append(json.dumps(row, ensure_ascii=False))
+        content = "\n".join(lines) + "\n"
+        return Response(content=content, media_type="application/x-ndjson")
+
+    json_text = json.dumps(payload, ensure_ascii=False, indent=2 if pretty else None)
+    return Response(content=json_text, media_type="application/json")
+
+
+@app.get("/api/option-chain-lite")
+def option_chain_lite(
+    symbol: str,
+    expiry: Optional[str] = None,
+    format: str = "json",
+    strike_step: Optional[float] = Query(None, ge=0),
+    all_strikes: bool = False,
+    force: bool = False,
+    download: bool = False,
+    pretty: bool = False,
+    limit: Optional[int] = Query(None, ge=1),
+    offset: Optional[int] = Query(None, ge=0),
+    mode: Optional[str] = None,
+    window: int = Query(7, ge=0),
+    token: Optional[str] = None,
+    x_api_token: Optional[str] = Header(None),
+) -> Response:
+    return option_chain(
+        symbol=symbol,
+        expiry=expiry,
+        format=format,
+        strike_step=strike_step,
+        all_strikes=all_strikes,
+        force=force,
+        download=download,
+        pretty=pretty,
+        limit=limit,
+        offset=offset,
+        mode=mode,
+        window=window,
+        lite=True,
+        token=token,
+        x_api_token=x_api_token,
+    )
 
 
 @app.post("/api/refresh")
@@ -376,6 +469,9 @@ def fetch_mcx_option_chain_from_marketwatch(symbol: str, expiry: Optional[str]) 
             continue
         entry = chain.setdefault(strike_key, {"CE_StrikePrice": strike})
         prefix = "CE_" if opt_type == "CE" else "PE_"
+        underlying_val = item.get("UnderlineValue", item.get("UnderlyingValue", ""))
+        if underlying_val not in ("", None):
+            entry["UnderlyingValue"] = underlying_val
         entry[f"{prefix}OpenInterest"] = item.get("OpenInterest", "")
         entry[f"{prefix}ChangeInOI"] = item.get("ChangeInOI", item.get("ChangeInOpenInterest", ""))
         entry[f"{prefix}Volume"] = item.get("Volume", "")
@@ -388,6 +484,61 @@ def fetch_mcx_option_chain_from_marketwatch(symbol: str, expiry: Optional[str]) 
 
     sorted_strikes = sorted(chain.keys())
     return [chain[strike] for strike in sorted_strikes]
+
+
+def get_underlying_value(rows: List[Dict[str, Any]]) -> Optional[float]:
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        for key in ("UnderlyingValue", "UnderlineValue", "underlyingValue", "UnderlineValue"):
+            val = row.get(key)
+            if val not in ("", None):
+                try:
+                    return float(val)
+                except (TypeError, ValueError):
+                    continue
+    return None
+
+
+def sort_rows_by_strike(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def strike_key(item: Dict[str, Any]) -> float:
+        val = item.get("CE_StrikePrice") if isinstance(item, dict) else None
+        try:
+            return float(val)
+        except (TypeError, ValueError):
+            return float("inf")
+
+    return sorted(rows, key=strike_key)
+
+
+def filter_atm_window(rows: List[Dict[str, Any]], underlying: Optional[float], window: int) -> List[Dict[str, Any]]:
+    if underlying is None or not rows:
+        return rows
+
+    strikes = []
+    for row in rows:
+        val = row.get("CE_StrikePrice") if isinstance(row, dict) else None
+        try:
+            strikes.append(float(val))
+        except (TypeError, ValueError):
+            strikes.append(float("inf"))
+
+    if not strikes:
+        return rows
+
+    closest_idx = min(range(len(strikes)), key=lambda i: abs(strikes[i] - underlying))
+    start = max(0, closest_idx - window)
+    end = min(len(rows), closest_idx + window + 1)
+    return rows[start:end]
+
+
+def apply_offset_limit(rows: List[Dict[str, Any]], offset: Optional[int], limit: Optional[int]) -> List[Dict[str, Any]]:
+    start = offset or 0
+    if start < 0:
+        start = 0
+    if limit is None:
+        return rows[start:]
+    return rows[start : start + limit]
 
 
 def fetch_nse_option_chain(symbol: str, expiry: Optional[str], force: bool = False) -> List[Dict[str, Any]]:
@@ -529,6 +680,7 @@ def nse_record_to_row(item: Dict[str, Any]) -> Dict[str, Any]:
         "PE_Volume": nse_get(pe, "totalTradedVolume"),
         "PE_ChangeInOI": nse_get(pe, "changeinOpenInterest", "changeInOpenInterest"),
         "PE_OpenInterest": nse_get(pe, "openInterest"),
+        "UnderlyingValue": nse_get(ce, "underlyingValue", "underlyingValue") or nse_get(pe, "underlyingValue"),
     }
 
 
@@ -698,12 +850,19 @@ def to_output_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return output_rows
 
 
-def to_csv(rows: List[Dict[str, Any]]) -> str:
+def to_lite_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    lite_rows: List[Dict[str, Any]] = []
+    for row in rows:
+        lite_rows.append({key: row.get(src, "") for key, src in LITE_MAP.items()})
+    return lite_rows
+
+
+def to_csv(rows: List[Dict[str, Any]], headers: List[str]) -> str:
     buffer = io.StringIO()
     writer = csv.writer(buffer)
-    writer.writerow(OUTPUT_HEADERS)
+    writer.writerow(headers)
     for row in rows:
-        writer.writerow([row.get(header, "") for header in OUTPUT_HEADERS])
+        writer.writerow([row.get(header, "") for header in headers])
     return buffer.getvalue()
 
 
