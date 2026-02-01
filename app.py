@@ -176,7 +176,7 @@ def option_chain(
     limit: Optional[int] = Query(None, ge=1),
     offset: Optional[int] = Query(None, ge=0),
     mode: Optional[str] = None,
-    window: int = Query(7, ge=0),
+    window: Optional[int] = Query(None, ge=0),
     lite: bool = False,
     token: Optional[str] = None,
     x_api_token: Optional[str] = Header(None),
@@ -221,8 +221,10 @@ def option_chain(
     underlying = get_underlying_value(rows)
 
     rows = sort_rows_by_strike(rows)
+    if mode is None and window is not None:
+        mode = "atm_window"
     if mode == "atm_window":
-        rows = filter_atm_window(rows, underlying, window)
+        rows = filter_atm_window(rows, underlying, window or 0)
     rows = apply_offset_limit(rows, offset, limit)
 
     output_rows = to_output_rows(rows)
@@ -278,7 +280,7 @@ def option_chain_lite(
     limit: Optional[int] = Query(None, ge=1),
     offset: Optional[int] = Query(None, ge=0),
     mode: Optional[str] = None,
-    window: int = Query(7, ge=0),
+    window: Optional[int] = Query(None, ge=0),
     token: Optional[str] = None,
     x_api_token: Optional[str] = Header(None),
 ) -> Response:
@@ -313,7 +315,7 @@ def option_chain_pretty(
     limit: Optional[int] = Query(None, ge=1),
     offset: Optional[int] = Query(None, ge=0),
     mode: Optional[str] = None,
-    window: int = Query(7, ge=0),
+    window: Optional[int] = Query(None, ge=0),
     token: Optional[str] = None,
     x_api_token: Optional[str] = Header(None),
 ) -> Response:
