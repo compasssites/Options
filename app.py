@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 from fastapi import FastAPI, Header, HTTPException, Query
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 CONFIG_PATH = os.getenv("CONFIG_PATH", "config.json")
@@ -171,6 +171,7 @@ def option_chain(
     strike_step: Optional[float] = Query(None, ge=0),
     all_strikes: bool = False,
     force: bool = False,
+    refresh: bool = False,
     download: bool = False,
     pretty: bool = False,
     limit: Optional[int] = Query(None, ge=1),
@@ -182,6 +183,9 @@ def option_chain(
     x_api_token: Optional[str] = Header(None),
 ) -> Response:
     check_token(token, x_api_token)
+
+    if refresh:
+        force = True
 
     symbol = symbol.upper().strip()
     config = load_config()
@@ -257,15 +261,27 @@ def option_chain(
     }
 
     if format.lower() == "ndjson":
+        def ndjson_stream():
+            meta = {k: payload[k] for k in payload if k != "rows"}
+            yield json.dumps(meta, ensure_ascii=False) + "\n"
+            for row in rows_payload:
+                yield json.dumps(row, ensure_ascii=False) + "\n"
+
+        return StreamingResponse(
+            ndjson_stream(),
+            media_type="application/x-ndjson; charset=utf-8",
+            headers={"Content-Disposition": "inline", "Cache-Control": "no-store"},
+        )
+
+    if format.lower() == "lines":
         lines = [json.dumps({k: payload[k] for k in payload if k != "rows"}, ensure_ascii=False)]
         for row in rows_payload:
             lines.append(json.dumps(row, ensure_ascii=False))
-        line_sep = "\r\n"
-        content = line_sep.join(lines) + line_sep
+        content = "\n".join(f"L{idx:04d} {line}" for idx, line in enumerate(lines, 1)) + "\n"
         return Response(
             content=content,
             media_type="text/plain; charset=utf-8",
-            headers={"Content-Disposition": "inline"},
+            headers={"Content-Disposition": "inline", "Cache-Control": "no-store"},
         )
 
     json_text = json.dumps(payload, ensure_ascii=False, indent=2 if pretty else None)
