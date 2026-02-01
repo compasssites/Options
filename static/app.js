@@ -248,7 +248,7 @@ function exportCsv() {
 }
 
 async function copyLink() {
-  const params = buildParams({ format: "json", pretty: "1", window: "12" });
+  const params = buildParams({ format: "text", window: "12" });
   const url = `${window.location.origin}/api/option-chain?${toQuery(params)}`;
   try {
     if (navigator.clipboard && window.isSecureContext) {

@@ -51,6 +51,7 @@ If `expiry` is not provided, the app uses the first configured expiry for the sy
 - `GET /api/option-chain-pretty?symbol=SILVERM&expiry=18FEB2026`
 - `GET /api/option-chain-chat?symbol=SILVERM&expiry=18FEB2026` (defaults to NDJSON)
 - `GET /api/option-chain?symbol=SILVERM&expiry=18FEB2026&format=lines` (line-numbered text)
+- `GET /api/option-chain?symbol=SILVERM&expiry=18FEB2026&format=text` (pretty JSON as text/plain)
 
 ## Notes
 

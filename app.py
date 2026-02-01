@@ -284,6 +284,14 @@ def option_chain(
             headers={"Content-Disposition": "inline", "Cache-Control": "no-store"},
         )
 
+    if format.lower() in ("text", "prettytext", "plain"):
+        json_text = json.dumps(payload, ensure_ascii=False, indent=2)
+        return Response(
+            content=json_text,
+            media_type="text/plain; charset=utf-8",
+            headers={"Cache-Control": "no-store"},
+        )
+
     json_text = json.dumps(payload, ensure_ascii=False, indent=2 if pretty else None)
     return Response(content=json_text, media_type="application/json")
 
