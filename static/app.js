@@ -12,20 +12,6 @@ const ROW_COUNT = document.getElementById("rowCount");
 const CACHE_STATUS = document.getElementById("cacheStatus");
 const TABLE = document.getElementById("chainTable");
 const EXCHANGE_PILL = document.getElementById("exchangePill");
-const TICKER_BAR = document.getElementById("tickerBar");
-const TICKER_STATUS = document.getElementById("tickerStatus");
-const TICKER_ITEMS = {
-  gold: {
-    price: document.getElementById("tickerGoldPrice"),
-    change: document.getElementById("tickerGoldChange"),
-    unit: document.getElementById("tickerGoldUnit"),
-  },
-  silver: {
-    price: document.getElementById("tickerSilverPrice"),
-    change: document.getElementById("tickerSilverChange"),
-    unit: document.getElementById("tickerSilverUnit"),
-  },
-};
 
 const STRIKE_DEFAULTS = {
   NIFTY: "50",
@@ -62,7 +48,6 @@ const HEADERS = [
 let autoRefreshTimer = null;
 let tokenValue = "";
 let symbolSources = {};
-let tickerTimer = null;
 
 function setStatus(message, tone = "neutral") {
   STATUS.textContent = message;
@@ -125,29 +110,6 @@ function tokenHeader() {
   return token ? { "X-API-Token": token } : {};
 }
 
-function formatTickerNumber(value, decimals = 2) {
-  if (value === null || value === undefined || value === "") {
-    return "--";
-  }
-  const num = Number(value);
-  if (!Number.isFinite(num)) {
-    return String(value);
-  }
-  return num.toLocaleString(undefined, { maximumFractionDigits: decimals });
-}
-
-function setTickerTone(element, value) {
-  if (!element) {
-    return;
-  }
-  const num = Number(value);
-  if (!Number.isFinite(num) || num === 0) {
-    element.dataset.tone = "flat";
-    return;
-  }
-  element.dataset.tone = num > 0 ? "up" : "down";
-}
-
 function setPercentTone(element, value) {
   if (!element) {
     return;
@@ -158,91 +120,6 @@ function setPercentTone(element, value) {
     return;
   }
   element.dataset.tone = num > 0 ? "up" : "down";
-}
-
-function parseErrorDetail(message) {
-  if (!message) {
-    return "Ticker unavailable";
-  }
-  const trimmed = message.trim();
-  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-    try {
-      const payload = JSON.parse(trimmed);
-      if (payload && payload.detail) {
-        return payload.detail;
-      }
-    } catch {
-      return message;
-    }
-  }
-  return message;
-}
-
-function updateTickerItem(item) {
-  const name = (item?.name || "").toLowerCase();
-  const target = name === "gold" ? TICKER_ITEMS.gold : name === "silver" ? TICKER_ITEMS.silver : null;
-  if (!target) {
-    return;
-  }
-
-  const last = item?.last ?? "";
-  const change = item?.change ?? "";
-  const changePct = item?.change_pct ?? "";
-
-  if (target.price) {
-    target.price.textContent = formatTickerNumber(last, 2);
-  }
-
-  const changeNum = Number(change);
-  const changePrefix = Number.isFinite(changeNum) && changeNum > 0 ? "+" : "";
-  const changeText = change !== "" ? `${changePrefix}${formatTickerNumber(change, 2)}` : "";
-  const pctText = changePct !== "" ? `${changePrefix}${formatTickerNumber(changePct, 2)}%` : "";
-  if (target.change) {
-    target.change.textContent = [changeText, pctText].filter(Boolean).join(" ");
-    setTickerTone(target.change, change);
-  }
-
-  if (target.unit) {
-    target.unit.textContent = item?.unit || "";
-  }
-}
-
-async function loadTicker() {
-  if (!TICKER_BAR) {
-    return;
-  }
-  try {
-    const data = await fetchJson("/api/ticker");
-    const items = Array.isArray(data?.items) ? data.items : [];
-    if (items.length === 0) {
-      if (TICKER_STATUS) {
-        TICKER_STATUS.textContent = "Ticker unavailable";
-      }
-      return;
-    }
-    items.forEach((item) => updateTickerItem(item));
-    if (TICKER_STATUS) {
-      const source = data?.source ? String(data.source).toUpperCase() : "";
-      const suffix = source ? ` · ${source}` : "";
-      TICKER_STATUS.textContent = data?.last_updated ? `Updated ${data.last_updated}${suffix}` : `Updated${suffix}`;
-    }
-  } catch (error) {
-    if (TICKER_STATUS) {
-      TICKER_STATUS.textContent = parseErrorDetail(error.message || "");
-    }
-  }
-}
-
-function scheduleTicker() {
-  if (!TICKER_BAR) {
-    return;
-  }
-  if (tickerTimer) {
-    clearInterval(tickerTimer);
-  }
-  tickerTimer = setInterval(() => {
-    loadTicker();
-  }, 60 * 1000);
 }
 
 async function loadSymbols() {
@@ -495,8 +372,6 @@ window.addEventListener("load", async () => {
     await loadExpiries(selected);
   }
   scheduleAutoRefresh();
-  await loadTicker();
-  scheduleTicker();
 });
 
 if ("serviceWorker" in navigator) {

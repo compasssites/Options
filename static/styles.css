@@ -110,69 +110,25 @@ h2,
   flex-wrap: wrap;
 }
 
-.ticker-left {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.ticker-items {
+.tv-ticker {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-.ticker-item {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 999px;
+.tv-widget {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 16px;
   background: rgba(15, 44, 58, 0.06);
   border: 1px solid rgba(15, 44, 58, 0.12);
-  font-size: 13px;
 }
 
-.ticker-label {
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.ticker-price {
-  font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.ticker-change {
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.ticker-change[data-tone="up"] {
-  color: #1b7a4b;
-}
-
-.ticker-change[data-tone="down"] {
-  color: #b03a2e;
-}
-
-.ticker-change[data-tone="flat"] {
-  color: var(--muted);
-}
-
-.ticker-unit {
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.ticker-meta {
-  font-size: 12px;
-  color: var(--muted);
+.tv-widget .tradingview-widget-container__widget {
+  min-height: 68px;
 }
 
 h1 {

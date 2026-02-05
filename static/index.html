@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/static/styles.css?v=20260205c" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260205d" />
   </head>
   <body>
     <div class="background">
@@ -23,23 +23,34 @@
     </div>
 
     <main class="shell">
-      <section class="ticker-bar" id="tickerBar">
-        <div class="ticker-left">
-          <div class="ticker-items">
-            <div class="ticker-item" data-metal="gold">
-              <span class="ticker-label">Gold</span>
-              <span class="ticker-price" id="tickerGoldPrice">--</span>
-              <span class="ticker-change" id="tickerGoldChange">--</span>
-              <span class="ticker-unit" id="tickerGoldUnit"></span>
-            </div>
-            <div class="ticker-item" data-metal="silver">
-              <span class="ticker-label">Silver</span>
-              <span class="ticker-price" id="tickerSilverPrice">--</span>
-              <span class="ticker-change" id="tickerSilverChange">--</span>
-              <span class="ticker-unit" id="tickerSilverUnit"></span>
-            </div>
+      <section class="ticker-bar">
+        <div class="tv-ticker">
+          <div class="tradingview-widget-container tv-widget">
+            <div class="tradingview-widget-container__widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js" async>
+            {
+              "symbol": "OANDA:XAUUSD",
+              "width": "220",
+              "height": "68",
+              "locale": "en",
+              "colorTheme": "light",
+              "isTransparent": true
+            }
+            </script>
           </div>
-          <div class="ticker-meta" id="tickerStatus">Ticker idle</div>
+          <div class="tradingview-widget-container tv-widget">
+            <div class="tradingview-widget-container__widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js" async>
+            {
+              "symbol": "OANDA:XAGUSD",
+              "width": "220",
+              "height": "68",
+              "locale": "en",
+              "colorTheme": "light",
+              "isTransparent": true
+            }
+            </script>
+          </div>
         </div>
         <div class="hero-status hero-status--tight">
           <span class="dot"></span>
@@ -120,6 +131,6 @@
       </section>
     </main>
 
-    <script src="/static/app.js?v=20260205c"></script>
+    <script src="/static/app.js?v=20260205d"></script>
   </body>
 </html>
