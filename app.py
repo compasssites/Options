@@ -168,15 +168,26 @@ def ticker(token: Optional[str] = None, x_api_token: Optional[str] = Header(None
     if provider in ("auto", "tradingeconomics", "te"):
         if not TE_API_KEY:
             if provider == "auto":
-                raise HTTPException(status_code=503, detail="No ticker API key configured")
+                # fall through to MCX fallback
+                pass
             raise HTTPException(status_code=503, detail="TE_API_KEY not set")
+        if TE_API_KEY:
+            rows, fetched_at = get_te_commodities_cached()
+            items = filter_te_metals(rows)
+            if items:
+                last_updated = datetime.fromtimestamp(fetched_at, tz=IST).isoformat(sep=" ", timespec="seconds")
+                return {"source": "tradingeconomics", "last_updated": last_updated, "items": items}
+            if provider != "auto":
+                raise HTTPException(status_code=502, detail="TradingEconomics returned no gold/silver rows")
 
-        rows, fetched_at = get_te_commodities_cached()
-        items = filter_te_metals(rows)
-        if not items:
-            raise HTTPException(status_code=502, detail="TradingEconomics returned no gold/silver rows")
-        last_updated = datetime.fromtimestamp(fetched_at, tz=IST).isoformat(sep=" ", timespec="seconds")
-        return {"source": "tradingeconomics", "last_updated": last_updated, "items": items}
+    if provider in ("auto", "mcx"):
+        rows = get_marketwatch_rows()
+        items = filter_mcx_metals(rows)
+        if items:
+            fetched_at = MARKETWATCH_CACHE.get("fetched_at", time.time())
+            last_updated = datetime.fromtimestamp(fetched_at, tz=IST).isoformat(sep=" ", timespec="seconds")
+            return {"source": "mcx", "last_updated": last_updated, "items": items}
+        raise HTTPException(status_code=502, detail="MCX marketwatch returned no gold/silver rows")
 
     raise HTTPException(status_code=400, detail="Unknown ticker provider")
 
@@ -935,6 +946,56 @@ def filter_te_metals(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 "change_pct": row.get("DailyPercentualChange", row.get("PercentualChange", "")),
                 "unit": row.get("unit", row.get("Unit", "")),
                 "last_update": row.get("LastUpdate", row.get("Date", "")),
+            }
+        )
+    items.sort(key=lambda item: item.get("name", ""))
+    return items
+
+
+def filter_mcx_metals(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    metals = {"GOLD": "Gold", "SILVER": "Silver"}
+    today = datetime.now(tz=IST).date()
+    best: Dict[str, Tuple[Optional[datetime], Dict[str, Any]]] = {}
+
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        symbol = str(row.get("Symbol") or row.get("ProductCode") or "").upper()
+        if symbol not in metals:
+            continue
+        instrument = str(row.get("InstrumentName") or "").upper()
+        if instrument and "FUT" not in instrument:
+            continue
+        expiry_value = row.get("ExpiryDate")
+        expiry_dt = parse_expiry_date(str(expiry_value)) if expiry_value else None
+        if expiry_dt and expiry_dt.date() < today:
+            continue
+        existing = best.get(symbol)
+        if existing is None:
+            best[symbol] = (expiry_dt, row)
+            continue
+        existing_expiry = existing[0]
+        if existing_expiry is None and expiry_dt is not None:
+            best[symbol] = (expiry_dt, row)
+            continue
+        if expiry_dt and existing_expiry and expiry_dt < existing_expiry:
+            best[symbol] = (expiry_dt, row)
+
+    items: List[Dict[str, Any]] = []
+    for symbol, name in metals.items():
+        entry = best.get(symbol)
+        if not entry:
+            continue
+        row = entry[1]
+        items.append(
+            {
+                "name": name,
+                "symbol": symbol,
+                "last": row.get("LTP", ""),
+                "change": row.get("AbsoluteChange", row.get("NetChange", row.get("Change", ""))),
+                "change_pct": row.get("PercentChange", row.get("PercChange", row.get("ChangePercent", ""))),
+                "unit": row.get("PriceUnit", row.get("Unit", "MCX")),
+                "last_update": row.get("LastUpdate", ""),
             }
         )
     items.sort(key=lambda item: item.get("name", ""))

@@ -222,7 +222,9 @@ async function loadTicker() {
     }
     items.forEach((item) => updateTickerItem(item));
     if (TICKER_STATUS) {
-      TICKER_STATUS.textContent = data?.last_updated ? `Updated ${data.last_updated}` : "Updated";
+      const source = data?.source ? String(data.source).toUpperCase() : "";
+      const suffix = source ? ` · ${source}` : "";
+      TICKER_STATUS.textContent = data?.last_updated ? `Updated ${data.last_updated}${suffix}` : `Updated${suffix}`;
     }
   } catch (error) {
     if (TICKER_STATUS) {
