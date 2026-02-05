@@ -35,8 +35,12 @@ If `expiry` is not provided, the app uses the first configured expiry for the sy
 - `CACHE_TTL_SECONDS`: Cache TTL in seconds (default 600).
 - `DEFAULT_STRIKE_STEP`: Default strike step for filtering (default 5000).
 - `CONFIG_PATH`: Path to config file (default `config.json`).
-- `TE_API_KEY`: Trading Economics API key (e.g. `guest:guest`) to enable the live gold/silver ticker.
-- `TE_CACHE_TTL_SECONDS`: Ticker cache TTL in seconds (default 60).
+- `METALS_PROVIDER`: Ticker provider (`auto`, `metals_api`, or `tradingeconomics`). Default `auto`.
+- `METALS_API_KEY`: Metals-API access key for gold/silver ticker (recommended).
+- `METALS_API_BASE`: Base currency for Metals-API (default `USD`).
+- `METALS_API_CACHE_TTL_SECONDS`: Metals-API cache TTL in seconds (default 300).
+- `TE_API_KEY`: Trading Economics API key (fallback for ticker).
+- `TE_CACHE_TTL_SECONDS`: Trading Economics cache TTL in seconds (default 60).
 
 ## CapRover deploy
 

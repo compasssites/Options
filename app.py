@@ -23,6 +23,12 @@ NSE_DEFAULT_STRIKE = int(os.getenv("NSE_DEFAULT_STRIKE", "26500"))
 TE_API_KEY = os.getenv("TE_API_KEY", "").strip()
 TE_CACHE_TTL_SECONDS = int(os.getenv("TE_CACHE_TTL_SECONDS", "60"))
 TE_COMMODITIES_URL = "https://api.tradingeconomics.com/markets/commodities"
+METALS_PROVIDER = os.getenv("METALS_PROVIDER", "auto").strip().lower()
+METALS_API_KEY = os.getenv("METALS_API_KEY", "").strip()
+METALS_API_BASE = os.getenv("METALS_API_BASE", "USD").strip().upper()
+METALS_API_CACHE_TTL_SECONDS = int(os.getenv("METALS_API_CACHE_TTL_SECONDS", "300"))
+METALS_API_LATEST_URL = "https://metals-api.com/api/latest"
+METALS_API_TIMESERIES_URL = "https://metals-api.com/api/timeseries"
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
@@ -112,6 +118,7 @@ CACHE: Dict[str, Dict[str, Any]] = {}
 MARKETWATCH_CACHE: Dict[str, Any] = {}
 NSE_CACHE: Dict[str, Any] = {}
 TE_CACHE: Dict[str, Any] = {}
+METALS_CACHE: Dict[str, Any] = {}
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
@@ -145,13 +152,33 @@ def health() -> Dict[str, str]:
 @app.get("/api/ticker")
 def ticker(token: Optional[str] = None, x_api_token: Optional[str] = Header(None)) -> Dict[str, Any]:
     check_token(token, x_api_token)
-    if not TE_API_KEY:
-        raise HTTPException(status_code=503, detail="TE_API_KEY not set")
+    provider = METALS_PROVIDER or "auto"
 
-    rows, fetched_at = get_te_commodities_cached()
-    items = filter_te_metals(rows)
-    last_updated = datetime.fromtimestamp(fetched_at, tz=IST).isoformat(sep=" ", timespec="seconds")
-    return {"source": "tradingeconomics", "last_updated": last_updated, "items": items}
+    if provider in ("auto", "metals_api", "metalsapi"):
+        if METALS_API_KEY:
+            items, fetched_at = get_metals_api_cached()
+            if items:
+                last_updated = datetime.fromtimestamp(fetched_at, tz=IST).isoformat(sep=" ", timespec="seconds")
+                return {"source": "metals_api", "last_updated": last_updated, "items": items}
+            if provider != "auto":
+                raise HTTPException(status_code=502, detail="Metals API returned no items")
+        elif provider != "auto":
+            raise HTTPException(status_code=503, detail="METALS_API_KEY not set")
+
+    if provider in ("auto", "tradingeconomics", "te"):
+        if not TE_API_KEY:
+            if provider == "auto":
+                raise HTTPException(status_code=503, detail="No ticker API key configured")
+            raise HTTPException(status_code=503, detail="TE_API_KEY not set")
+
+        rows, fetched_at = get_te_commodities_cached()
+        items = filter_te_metals(rows)
+        if not items:
+            raise HTTPException(status_code=502, detail="TradingEconomics returned no gold/silver rows")
+        last_updated = datetime.fromtimestamp(fetched_at, tz=IST).isoformat(sep=" ", timespec="seconds")
+        return {"source": "tradingeconomics", "last_updated": last_updated, "items": items}
+
+    raise HTTPException(status_code=400, detail="Unknown ticker provider")
 
 
 @app.get("/api/symbols")
@@ -890,18 +917,19 @@ def get_te_commodities_cached() -> Tuple[List[Dict[str, Any]], float]:
 
 
 def filter_te_metals(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    wanted = {"gold", "silver"}
     items: List[Dict[str, Any]] = []
     for row in rows:
         if not isinstance(row, dict):
             continue
         name = str(row.get("Name", "")).strip()
-        if name.lower() not in wanted:
+        symbol = str(row.get("Symbol", "")).strip()
+        key = f"{name} {symbol}".lower()
+        if not any(tag in key for tag in ("gold", "silver", "xau", "xag")):
             continue
         items.append(
             {
                 "name": name,
-                "symbol": row.get("Symbol", ""),
+                "symbol": symbol,
                 "last": row.get("Last", ""),
                 "change": row.get("DailyChange", row.get("Change", "")),
                 "change_pct": row.get("DailyPercentualChange", row.get("PercentualChange", "")),
@@ -911,6 +939,105 @@ def filter_te_metals(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         )
     items.sort(key=lambda item: item.get("name", ""))
     return items
+
+
+def fetch_metals_api_latest() -> Dict[str, Any]:
+    resp = requests.get(
+        METALS_API_LATEST_URL,
+        params={
+            "access_key": METALS_API_KEY,
+            "base": METALS_API_BASE,
+            "symbols": "XAU,XAG",
+        },
+        timeout=20,
+    )
+    resp.raise_for_status()
+    payload: Any = resp.json()
+    if isinstance(payload, dict) and payload.get("success") is False:
+        error_info = payload.get("error", {})
+        message = error_info.get("info") or error_info.get("type") or "Metals API error"
+        raise HTTPException(status_code=502, detail=str(message))
+    return payload if isinstance(payload, dict) else {}
+
+
+def fetch_metals_api_timeseries(start_date: str, end_date: str) -> Dict[str, Any]:
+    resp = requests.get(
+        METALS_API_TIMESERIES_URL,
+        params={
+            "access_key": METALS_API_KEY,
+            "base": METALS_API_BASE,
+            "symbols": "XAU,XAG",
+            "start_date": start_date,
+            "end_date": end_date,
+        },
+        timeout=20,
+    )
+    resp.raise_for_status()
+    payload: Any = resp.json()
+    if isinstance(payload, dict) and payload.get("success") is False:
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def build_metals_api_items(latest_payload: Dict[str, Any], timeseries_payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+    rates = latest_payload.get("rates") if isinstance(latest_payload, dict) else {}
+    if not isinstance(rates, dict):
+        rates = {}
+
+    prev_rates: Dict[str, Any] = {}
+    if isinstance(timeseries_payload, dict):
+        series = timeseries_payload.get("rates")
+        if isinstance(series, dict):
+            dates = sorted(series.keys())
+            if len(dates) >= 2:
+                prev_rates = series.get(dates[-2], {}) or {}
+
+    def price_from_rate(rate: Optional[float]) -> Optional[float]:
+        if rate in (None, 0):
+            return None
+        return 1.0 / rate
+
+    items: List[Dict[str, Any]] = []
+    for symbol, name in (("XAU", "Gold"), ("XAG", "Silver")):
+        rate = to_float(rates.get(symbol))
+        last_price = price_from_rate(rate)
+        prev_rate = to_float(prev_rates.get(symbol))
+        prev_price = price_from_rate(prev_rate)
+        change = None
+        change_pct = None
+        if last_price is not None and prev_price not in (None, 0):
+            change = last_price - prev_price
+            change_pct = (change / prev_price) * 100
+        items.append(
+            {
+                "name": name,
+                "symbol": symbol,
+                "last": format_number(last_price, 2),
+                "change": format_number(change, 2),
+                "change_pct": format_number(change_pct, 2),
+                "unit": f"{METALS_API_BASE}/oz",
+                "last_update": latest_payload.get("date", ""),
+            }
+        )
+    return items
+
+
+def get_metals_api_cached() -> Tuple[List[Dict[str, Any]], float]:
+    now = time.time()
+    cached = METALS_CACHE.get("items")
+    fetched_at = METALS_CACHE.get("fetched_at", 0)
+    if cached and now - fetched_at < METALS_API_CACHE_TTL_SECONDS:
+        return cached, fetched_at
+
+    latest_payload = fetch_metals_api_latest()
+    today = datetime.utcnow().date()
+    start_date = (today - timedelta(days=1)).isoformat()
+    end_date = today.isoformat()
+    timeseries_payload = fetch_metals_api_timeseries(start_date, end_date)
+    items = build_metals_api_items(latest_payload, timeseries_payload)
+    METALS_CACHE["items"] = items
+    METALS_CACHE["fetched_at"] = now
+    return items, now
 
 
 def parse_expiry_date(value: str) -> Optional[datetime]:
