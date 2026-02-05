@@ -960,13 +960,13 @@ def fetch_metals_api_latest() -> Dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def fetch_metals_api_timeseries(start_date: str, end_date: str) -> Dict[str, Any]:
+def fetch_metals_api_timeseries(symbol: str, start_date: str, end_date: str) -> Dict[str, Any]:
     resp = requests.get(
         METALS_API_TIMESERIES_URL,
         params={
             "access_key": METALS_API_KEY,
             "base": METALS_API_BASE,
-            "symbols": "XAU,XAG",
+            "symbols": symbol,
             "start_date": start_date,
             "end_date": end_date,
         },
@@ -979,18 +979,13 @@ def fetch_metals_api_timeseries(start_date: str, end_date: str) -> Dict[str, Any
     return payload if isinstance(payload, dict) else {}
 
 
-def build_metals_api_items(latest_payload: Dict[str, Any], timeseries_payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+def build_metals_api_items(
+    latest_payload: Dict[str, Any],
+    prev_rates: Dict[str, Any],
+) -> List[Dict[str, Any]]:
     rates = latest_payload.get("rates") if isinstance(latest_payload, dict) else {}
     if not isinstance(rates, dict):
         rates = {}
-
-    prev_rates: Dict[str, Any] = {}
-    if isinstance(timeseries_payload, dict):
-        series = timeseries_payload.get("rates")
-        if isinstance(series, dict):
-            dates = sorted(series.keys())
-            if len(dates) >= 2:
-                prev_rates = series.get(dates[-2], {}) or {}
 
     def price_from_rate(rate: Optional[float]) -> Optional[float]:
         if rate in (None, 0):
@@ -1031,10 +1026,19 @@ def get_metals_api_cached() -> Tuple[List[Dict[str, Any]], float]:
 
     latest_payload = fetch_metals_api_latest()
     today = datetime.utcnow().date()
-    start_date = (today - timedelta(days=1)).isoformat()
-    end_date = today.isoformat()
-    timeseries_payload = fetch_metals_api_timeseries(start_date, end_date)
-    items = build_metals_api_items(latest_payload, timeseries_payload)
+    end_date = (today - timedelta(days=1)).isoformat()
+    start_date = end_date
+    prev_rates: Dict[str, Any] = {}
+    for symbol in ("XAU", "XAG"):
+        timeseries_payload = fetch_metals_api_timeseries(symbol, start_date, end_date)
+        if not isinstance(timeseries_payload, dict):
+            continue
+        series = timeseries_payload.get("rates")
+        if not isinstance(series, dict):
+            continue
+        if end_date in series and isinstance(series[end_date], dict):
+            prev_rates[symbol] = series[end_date].get(symbol)
+    items = build_metals_api_items(latest_payload, prev_rates)
     METALS_CACHE["items"] = items
     METALS_CACHE["fetched_at"] = now
     return items, now
