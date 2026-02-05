@@ -148,6 +148,36 @@ function setTickerTone(element, value) {
   element.dataset.tone = num > 0 ? "up" : "down";
 }
 
+function setPercentTone(element, value) {
+  if (!element) {
+    return;
+  }
+  const num = Number(value);
+  if (!Number.isFinite(num) || num === 0) {
+    element.dataset.tone = "flat";
+    return;
+  }
+  element.dataset.tone = num > 0 ? "up" : "down";
+}
+
+function parseErrorDetail(message) {
+  if (!message) {
+    return "Ticker unavailable";
+  }
+  const trimmed = message.trim();
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    try {
+      const payload = JSON.parse(trimmed);
+      if (payload && payload.detail) {
+        return payload.detail;
+      }
+    } catch {
+      return message;
+    }
+  }
+  return message;
+}
+
 function updateTickerItem(item) {
   const name = (item?.name || "").toLowerCase();
   const target = name === "gold" ? TICKER_ITEMS.gold : name === "silver" ? TICKER_ITEMS.silver : null;
@@ -196,7 +226,7 @@ async function loadTicker() {
     }
   } catch (error) {
     if (TICKER_STATUS) {
-      TICKER_STATUS.textContent = "Ticker unavailable";
+      TICKER_STATUS.textContent = parseErrorDetail(error.message || "");
     }
   }
 }
@@ -308,6 +338,9 @@ function updateTable(rows) {
       const td = document.createElement("td");
       td.textContent = row[header] ?? "";
       applyColumnClasses(td, header);
+      if (header.endsWith("Pct_Chng")) {
+        setPercentTone(td, row[header]);
+      }
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
@@ -334,6 +367,9 @@ function applyColumnClasses(cell, header) {
   }
   if (header === "CALL_LTP" || header === "PUT_LTP" || header === "Strike_Price") {
     cell.classList.add("ltp-col");
+  }
+  if (header.endsWith("Pct_Chng")) {
+    cell.classList.add("pct-col");
   }
 }
 

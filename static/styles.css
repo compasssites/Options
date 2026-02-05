@@ -110,6 +110,12 @@ h2,
   flex-wrap: wrap;
 }
 
+.ticker-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .ticker-items {
   display: flex;
   align-items: center;
@@ -169,13 +175,6 @@ h2,
   color: var(--muted);
 }
 
-.hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-}
-
 h1 {
   font-size: clamp(32px, 4vw, 52px);
   margin: 0;
@@ -192,6 +191,12 @@ h1 {
   padding: 10px 14px;
   border-radius: 999px;
   box-shadow: var(--shadow);
+}
+
+.hero-status--tight {
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: none;
+  padding: 8px 12px;
 }
 
 .dot {
@@ -414,6 +419,20 @@ h1 {
   color: var(--put);
 }
 
+#chainTable td.pct-col[data-tone="up"] {
+  color: #1b7a4b;
+  font-weight: 700;
+}
+
+#chainTable td.pct-col[data-tone="down"] {
+  color: #b03a2e;
+  font-weight: 700;
+}
+
+#chainTable td.pct-col[data-tone="flat"] {
+  color: var(--muted);
+}
+
 #chainTable th.strike-col,
 #chainTable td.strike-col {
   color: var(--strike);
@@ -449,11 +468,6 @@ h1 {
 
 @media (max-width: 960px) {
   .ticker-bar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .hero {
     flex-direction: column;
     align-items: flex-start;
   }

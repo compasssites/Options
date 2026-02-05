@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/static/styles.css?v=20260205a" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260205b" />
   </head>
   <body>
     <div class="background">
@@ -24,26 +24,24 @@
 
     <main class="shell">
       <section class="ticker-bar" id="tickerBar">
-        <div class="ticker-items">
-          <div class="ticker-item" data-metal="gold">
-            <span class="ticker-label">Gold</span>
-            <span class="ticker-price" id="tickerGoldPrice">--</span>
-            <span class="ticker-change" id="tickerGoldChange">--</span>
-            <span class="ticker-unit" id="tickerGoldUnit"></span>
+        <div class="ticker-left">
+          <div class="ticker-items">
+            <div class="ticker-item" data-metal="gold">
+              <span class="ticker-label">Gold</span>
+              <span class="ticker-price" id="tickerGoldPrice">--</span>
+              <span class="ticker-change" id="tickerGoldChange">--</span>
+              <span class="ticker-unit" id="tickerGoldUnit"></span>
+            </div>
+            <div class="ticker-item" data-metal="silver">
+              <span class="ticker-label">Silver</span>
+              <span class="ticker-price" id="tickerSilverPrice">--</span>
+              <span class="ticker-change" id="tickerSilverChange">--</span>
+              <span class="ticker-unit" id="tickerSilverUnit"></span>
+            </div>
           </div>
-          <div class="ticker-item" data-metal="silver">
-            <span class="ticker-label">Silver</span>
-            <span class="ticker-price" id="tickerSilverPrice">--</span>
-            <span class="ticker-change" id="tickerSilverChange">--</span>
-            <span class="ticker-unit" id="tickerSilverUnit"></span>
-          </div>
+          <div class="ticker-meta" id="tickerStatus">Ticker idle</div>
         </div>
-        <div class="ticker-meta" id="tickerStatus">Ticker idle</div>
-      </section>
-
-      <header class="hero hero--compact">
-        <h1>Option Chain Hub</h1>
-        <div class="hero-status">
+        <div class="hero-status hero-status--tight">
           <span class="dot"></span>
           <span id="lastUpdated">Not fetched yet</span>
           <span class="divider">•</span>
@@ -51,7 +49,7 @@
           <span class="divider">•</span>
           <span>Cache <strong id="cacheStatus">Idle</strong></span>
         </div>
-      </header>
+      </section>
 
       <section class="table-card">
         <div class="table-head">
@@ -122,6 +120,6 @@
       </section>
     </main>
 
-    <script src="/static/app.js?v=20260205a"></script>
+    <script src="/static/app.js?v=20260205b"></script>
   </body>
 </html>
