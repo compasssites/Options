@@ -23,6 +23,24 @@
     </div>
 
     <main class="shell">
+      <section class="ticker-bar" id="tickerBar">
+        <div class="ticker-items">
+          <div class="ticker-item" data-metal="gold">
+            <span class="ticker-label">Gold</span>
+            <span class="ticker-price" id="tickerGoldPrice">--</span>
+            <span class="ticker-change" id="tickerGoldChange">--</span>
+            <span class="ticker-unit" id="tickerGoldUnit"></span>
+          </div>
+          <div class="ticker-item" data-metal="silver">
+            <span class="ticker-label">Silver</span>
+            <span class="ticker-price" id="tickerSilverPrice">--</span>
+            <span class="ticker-change" id="tickerSilverChange">--</span>
+            <span class="ticker-unit" id="tickerSilverUnit"></span>
+          </div>
+        </div>
+        <div class="ticker-meta" id="tickerStatus">Ticker idle</div>
+      </section>
+
       <header class="hero hero--compact">
         <h1>Option Chain Hub</h1>
         <div class="hero-status">

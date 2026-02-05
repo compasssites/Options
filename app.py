@@ -20,6 +20,9 @@ CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "600"))
 MARKETWATCH_TTL_SECONDS = int(os.getenv("MARKETWATCH_TTL_SECONDS", str(CACHE_TTL_SECONDS)))
 DEFAULT_STRIKE_STEP = float(os.getenv("DEFAULT_STRIKE_STEP", "5000"))
 NSE_DEFAULT_STRIKE = int(os.getenv("NSE_DEFAULT_STRIKE", "26500"))
+TE_API_KEY = os.getenv("TE_API_KEY", "").strip()
+TE_CACHE_TTL_SECONDS = int(os.getenv("TE_CACHE_TTL_SECONDS", "60"))
+TE_COMMODITIES_URL = "https://api.tradingeconomics.com/markets/commodities"
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
@@ -33,8 +36,12 @@ OUTPUT_COLUMNS = [
     "CE_AskPrice",
     "CE_AskQty",
     "CE_LTP",
+    "CE_PrevClose",
+    "CE_PctChange",
     "CE_StrikePrice",
     "PE_LTP",
+    "PE_PrevClose",
+    "PE_PctChange",
     "PE_BidQty",
     "PE_BidPrice",
     "PE_AskPrice",
@@ -55,8 +62,12 @@ OUTPUT_HEADERS = [
     "CALL_Ask_Price",
     "CALL_Ask_Qty",
     "CALL_LTP",
+    "CALL_Prev_Close",
+    "CALL_Pct_Chng",
     "Strike_Price",
     "PUT_LTP",
+    "PUT_Prev_Close",
+    "PUT_Pct_Chng",
     "PUT_Bid_Qty",
     "PUT_Bid_Price",
     "PUT_Ask_Price",
@@ -100,6 +111,7 @@ _DATE_RE = re.compile(r"^/Date\(([-+]?\d+)([+-]\d{4})?\)/$")
 CACHE: Dict[str, Dict[str, Any]] = {}
 MARKETWATCH_CACHE: Dict[str, Any] = {}
 NSE_CACHE: Dict[str, Any] = {}
+TE_CACHE: Dict[str, Any] = {}
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
@@ -128,6 +140,18 @@ def service_worker() -> FileResponse:
 @app.get("/api/health")
 def health() -> Dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/api/ticker")
+def ticker(token: Optional[str] = None, x_api_token: Optional[str] = Header(None)) -> Dict[str, Any]:
+    check_token(token, x_api_token)
+    if not TE_API_KEY:
+        raise HTTPException(status_code=503, detail="TE_API_KEY not set")
+
+    rows, fetched_at = get_te_commodities_cached()
+    items = filter_te_metals(rows)
+    last_updated = datetime.fromtimestamp(fetched_at, tz=IST).isoformat(sep=" ", timespec="seconds")
+    return {"source": "tradingeconomics", "last_updated": last_updated, "items": items}
 
 
 @app.get("/api/symbols")
@@ -491,6 +515,7 @@ def get_cached_rows(
         rows = fetch_nse_option_chain(symbol, expiry, force=force)
     else:
         rows = []
+    rows = add_derived_fields(rows)
     if not all_strikes:
         rows = [row for row in rows if is_round_strike(row.get("CE_StrikePrice"), strike_step)]
 
@@ -839,6 +864,55 @@ def get_marketwatch_rows() -> List[Dict[str, Any]]:
     return rows
 
 
+def fetch_te_commodities() -> List[Dict[str, Any]]:
+    resp = requests.get(
+        TE_COMMODITIES_URL,
+        params={"c": TE_API_KEY},
+        timeout=20,
+    )
+    resp.raise_for_status()
+    payload: Any = resp.json()
+    if isinstance(payload, list):
+        return payload
+    return []
+
+
+def get_te_commodities_cached() -> Tuple[List[Dict[str, Any]], float]:
+    now = time.time()
+    cached = TE_CACHE.get("rows")
+    fetched_at = TE_CACHE.get("fetched_at", 0)
+    if cached and now - fetched_at < TE_CACHE_TTL_SECONDS:
+        return cached, fetched_at
+    rows = fetch_te_commodities()
+    TE_CACHE["rows"] = rows
+    TE_CACHE["fetched_at"] = now
+    return rows, now
+
+
+def filter_te_metals(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    wanted = {"gold", "silver"}
+    items: List[Dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = str(row.get("Name", "")).strip()
+        if name.lower() not in wanted:
+            continue
+        items.append(
+            {
+                "name": name,
+                "symbol": row.get("Symbol", ""),
+                "last": row.get("Last", ""),
+                "change": row.get("DailyChange", row.get("Change", "")),
+                "change_pct": row.get("DailyPercentualChange", row.get("PercentualChange", "")),
+                "unit": row.get("unit", row.get("Unit", "")),
+                "last_update": row.get("LastUpdate", row.get("Date", "")),
+            }
+        )
+    items.sort(key=lambda item: item.get("name", ""))
+    return items
+
+
 def parse_expiry_date(value: str) -> Optional[datetime]:
     if not value:
         return None
@@ -928,6 +1002,71 @@ def parse_dotnet_date(value: str) -> str:
         dt_local = dt_utc.astimezone(IST)
 
     return dt_local.isoformat(sep=" ", timespec="seconds")
+
+
+def to_float(value: Any) -> Optional[float]:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        cleaned = value.strip()
+        if not cleaned:
+            return None
+        cleaned = cleaned.replace(",", "")
+        try:
+            return float(cleaned)
+        except ValueError:
+            return None
+    return None
+
+
+def format_number(value: Optional[float], decimals: int = 2) -> Any:
+    if value is None:
+        return ""
+    return round(value, decimals)
+
+
+def get_prev_close_value(row: Dict[str, Any], prefix: str) -> Optional[float]:
+    for key in (
+        f"{prefix}_PrevClose",
+        f"{prefix}_PreviousClose",
+        f"{prefix}_PrevClosePrice",
+        f"{prefix}_PreviousClosePrice",
+    ):
+        val = row.get(key)
+        parsed = to_float(val)
+        if parsed is not None:
+            return parsed
+    return None
+
+
+def add_change_fields(row: Dict[str, Any], prefix: str) -> None:
+    ltp = to_float(row.get(f"{prefix}_LTP"))
+    abs_chg = to_float(row.get(f"{prefix}_AbsoluteChange"))
+    prev_close = get_prev_close_value(row, prefix)
+
+    if prev_close is None and ltp is not None and abs_chg is not None:
+        prev_close = ltp - abs_chg
+
+    pct_change = None
+    if prev_close not in (None, 0):
+        if abs_chg is not None:
+            pct_change = (abs_chg / prev_close) * 100
+        elif ltp is not None:
+            pct_change = ((ltp - prev_close) / prev_close) * 100
+
+    row[f"{prefix}_PrevClose"] = format_number(prev_close, 2)
+    row[f"{prefix}_PctChange"] = format_number(pct_change, 2)
+
+
+def add_derived_fields(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        add_change_fields(row, "CE")
+        add_change_fields(row, "PE")
+    return rows
 
 
 def is_round_strike(value: Any, step: float) -> bool:
