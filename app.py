@@ -906,9 +906,9 @@ def pick_mcx_future(rows: List[Dict[str, Any]], symbol: str) -> Optional[Dict[st
 
 
 def mcx_quote_from_row(row: Dict[str, Any], name: str) -> Dict[str, Any]:
-    ltp = to_float(row.get("LTP") or row.get("Last"))
-    abs_chg = to_float(row.get("AbsoluteChange") or row.get("NetChange") or row.get("Change"))
-    pct = to_float(row.get("PercentChange") or row.get("PercChange") or row.get("ChangePercent"))
+    ltp = select_mcx_price(row)
+    abs_chg = select_mcx_change(row)
+    pct = select_mcx_percent(row)
     if pct is None and ltp is not None and abs_chg is not None:
         prev = ltp - abs_chg
         if prev:
@@ -921,6 +921,50 @@ def mcx_quote_from_row(row: Dict[str, Any], name: str) -> Dict[str, Any]:
         "unit": row.get("PriceUnit", "INR"),
         "last_update": row.get("LastUpdate", ""),
     }
+
+
+def select_mcx_price(row: Dict[str, Any]) -> Optional[float]:
+    candidates = [
+        "LTP",
+        "LastPrice",
+        "Last",
+        "Close",
+        "ClosePrice",
+        "SettlementPrice",
+        "OpenPrice",
+        "Price",
+    ]
+    values = [to_float(row.get(key)) for key in candidates]
+    values = [val for val in values if val is not None and val > 0]
+    return max(values) if values else None
+
+
+def select_mcx_change(row: Dict[str, Any]) -> Optional[float]:
+    candidates = [
+        "AbsoluteChange",
+        "NetChange",
+        "Change",
+        "ChangeInLTP",
+    ]
+    for key in candidates:
+        val = to_float(row.get(key))
+        if val is not None:
+            return val
+    return None
+
+
+def select_mcx_percent(row: Dict[str, Any]) -> Optional[float]:
+    candidates = [
+        "PercentChange",
+        "PercChange",
+        "ChangePercent",
+        "Percent",
+    ]
+    for key in candidates:
+        val = to_float(row.get(key))
+        if val is not None:
+            return val
+    return None
 
 
 def get_mcx_expiries(symbol: str) -> List[str]:
