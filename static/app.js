@@ -228,7 +228,7 @@ function updateMcxCard(item) {
 
 async function loadMcxMetals() {
   try {
-    const data = await fetchJson("/api/mcx-metals");
+    const data = await fetchJson("/api/mcx-metals", { force: "true" });
     const items = Array.isArray(data?.items) ? data.items : [];
     items.forEach((item) => updateMcxCard(item));
   } catch {

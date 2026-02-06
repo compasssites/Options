@@ -102,12 +102,13 @@ h2,
   align-items: center;
   justify-content: flex-start;
   gap: 16px;
-  padding: 16px 18px;
+  padding: 20px 18px;
   border-radius: 18px;
   border: 1px solid var(--border);
   background: linear-gradient(120deg, rgba(255, 255, 255, 0.85), rgba(241, 247, 248, 0.9));
   box-shadow: var(--shadow);
   flex-wrap: wrap;
+  overflow: hidden;
 }
 
 .ticker-toggle {
@@ -146,11 +147,12 @@ h2,
   grid-template-columns: repeat(4, minmax(200px, 1fr));
   gap: 12px;
   margin-top: 10px;
+  margin-bottom: 6px;
 }
 
 .metals-cell {
   min-width: 0;
-  height: 108px;
+  height: 112px;
   display: flex;
   align-items: stretch;
 }
@@ -169,7 +171,7 @@ h2,
 }
 
 .tv-widget .tradingview-widget-container__widget {
-  min-height: 108px;
+  min-height: 112px;
   width: 100%;
 }
 

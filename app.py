@@ -142,9 +142,13 @@ def health() -> Dict[str, str]:
 
 
 @app.get("/api/mcx-metals")
-def mcx_metals(token: Optional[str] = None, x_api_token: Optional[str] = Header(None)) -> Dict[str, Any]:
+def mcx_metals(
+    force: bool = False,
+    token: Optional[str] = None,
+    x_api_token: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     check_token(token, x_api_token)
-    rows = get_marketwatch_rows()
+    rows = get_marketwatch_rows(force=force)
     gold_row = pick_mcx_future(rows, MCX_GOLD_SYMBOLS)
     silver_row = pick_mcx_future(rows, MCX_SILVER_SYMBOLS)
     items = []
@@ -855,11 +859,11 @@ def fetch_mcx_marketwatch() -> List[Dict[str, Any]]:
     return []
 
 
-def get_marketwatch_rows() -> List[Dict[str, Any]]:
+def get_marketwatch_rows(force: bool = False) -> List[Dict[str, Any]]:
     now = time.time()
     cached = MARKETWATCH_CACHE.get("rows")
     fetched_at = MARKETWATCH_CACHE.get("fetched_at", 0)
-    if cached and now - fetched_at < MARKETWATCH_TTL_SECONDS:
+    if not force and cached and now - fetched_at < MARKETWATCH_TTL_SECONDS:
         return cached
     rows = fetch_mcx_marketwatch()
     MARKETWATCH_CACHE["rows"] = rows
