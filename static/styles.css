@@ -142,18 +142,15 @@ h2,
 }
 
 .metals-row {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-  flex-wrap: nowrap;
   margin-top: 10px;
-  overflow-x: auto;
-  padding-bottom: 6px;
 }
 
 .metals-cell {
-  flex: 0 0 240px;
-  height: 96px;
+  min-width: 0;
+  height: 84px;
   display: flex;
   align-items: stretch;
 }
@@ -171,7 +168,7 @@ h2,
 }
 
 .tv-widget .tradingview-widget-container__widget {
-  min-height: 96px;
+  min-height: 84px;
   width: 100%;
 }
 
@@ -186,6 +183,12 @@ h2,
   width: 100%;
   height: 100%;
   justify-content: center;
+}
+
+@media (max-width: 1200px) {
+  .metals-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .mcx-label {
