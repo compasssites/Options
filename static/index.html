@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/static/styles.css?v=20260205e" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260205f" />
   </head>
   <body>
     <div class="background">
@@ -24,34 +24,37 @@
 
     <main class="shell">
       <section class="ticker-bar">
-        <div class="tv-ticker">
-          <div class="tradingview-widget-container tv-widget">
-            <div class="tradingview-widget-container__widget"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-            {
-              "symbol": "OANDA:XAUUSD",
-              "width": "160",
-              "height": "60",
-              "locale": "en",
-              "colorTheme": "light",
-              "isTransparent": true
-            }
-            </script>
+        <details class="ticker-toggle">
+          <summary>Metals (US)</summary>
+          <div class="tv-ticker">
+            <div class="tradingview-widget-container tv-widget">
+              <div class="tradingview-widget-container__widget"></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+              {
+                "symbol": "OANDA:XAUUSD",
+                "width": "140",
+                "height": "50",
+                "locale": "en",
+                "colorTheme": "light",
+                "isTransparent": true
+              }
+              </script>
+            </div>
+            <div class="tradingview-widget-container tv-widget">
+              <div class="tradingview-widget-container__widget"></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+              {
+                "symbol": "OANDA:XAGUSD",
+                "width": "140",
+                "height": "50",
+                "locale": "en",
+                "colorTheme": "light",
+                "isTransparent": true
+              }
+              </script>
+            </div>
           </div>
-          <div class="tradingview-widget-container tv-widget">
-            <div class="tradingview-widget-container__widget"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-            {
-              "symbol": "OANDA:XAGUSD",
-              "width": "160",
-              "height": "60",
-              "locale": "en",
-              "colorTheme": "light",
-              "isTransparent": true
-            }
-            </script>
-          </div>
-        </div>
+        </details>
         <div class="hero-status hero-status--tight">
           <span class="dot"></span>
           <span id="lastUpdated">Not fetched yet</span>
@@ -131,6 +134,6 @@
       </section>
     </main>
 
-    <script src="/static/app.js?v=20260205e"></script>
+    <script src="/static/app.js?v=20260205f"></script>
   </body>
 </html>
