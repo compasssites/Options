@@ -108,6 +108,9 @@ _DATE_RE = re.compile(r"^/Date\(([-+]?\d+)([+-]\d{4})?\)/$")
 CACHE: Dict[str, Dict[str, Any]] = {}
 MARKETWATCH_CACHE: Dict[str, Any] = {}
 NSE_CACHE: Dict[str, Any] = {}
+
+MCX_GOLD_SYMBOLS = [sym.strip().upper() for sym in os.getenv("MCX_GOLD_SYMBOLS", "GOLDM,GOLD").split(",") if sym.strip()]
+MCX_SILVER_SYMBOLS = [sym.strip().upper() for sym in os.getenv("MCX_SILVER_SYMBOLS", "SILVERM,SILVER").split(",") if sym.strip()]
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
@@ -142,8 +145,8 @@ def health() -> Dict[str, str]:
 def mcx_metals(token: Optional[str] = None, x_api_token: Optional[str] = Header(None)) -> Dict[str, Any]:
     check_token(token, x_api_token)
     rows = get_marketwatch_rows()
-    gold_row = pick_mcx_future(rows, ("GOLD",))
-    silver_row = pick_mcx_future(rows, ("SILVER",))
+    gold_row = pick_mcx_future(rows, MCX_GOLD_SYMBOLS)
+    silver_row = pick_mcx_future(rows, MCX_SILVER_SYMBOLS)
     items = []
     if gold_row:
         items.append(mcx_quote_from_row(gold_row, "MCX Gold"))
@@ -873,33 +876,40 @@ def parse_expiry_date(value: str) -> Optional[datetime]:
         return None
 
 
-def pick_mcx_future(rows: List[Dict[str, Any]], symbols: Tuple[str, ...]) -> Optional[Dict[str, Any]]:
+def pick_mcx_future(rows: List[Dict[str, Any]], symbols: List[str]) -> Optional[Dict[str, Any]]:
     today = datetime.now(tz=IST).date()
-    symbols = tuple(sym.upper().strip() for sym in symbols)
-    best_row: Optional[Dict[str, Any]] = None
-    best_price: Optional[float] = None
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        row_symbol = str(row.get("Symbol") or row.get("ProductCode") or "").upper()
-        if not any(row_symbol.startswith(sym) for sym in symbols):
-            continue
-        instrument = str(row.get("InstrumentName") or "").upper()
-        if "OPT" in instrument:
-            continue
-        if instrument and "FUT" not in instrument:
-            continue
-        expiry_value = row.get("ExpiryDate")
-        expiry_dt = parse_expiry_date(str(expiry_value)) if expiry_value else None
-        if expiry_dt and expiry_dt.date() < today:
-            continue
-        price = select_mcx_price(row)
-        if price is None:
-            continue
-        if best_price is None or price > best_price:
-            best_row = row
-            best_price = price
-    return best_row
+    for symbol in symbols:
+        best_row: Optional[Dict[str, Any]] = None
+        best_expiry: Optional[datetime] = None
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            row_symbol = str(row.get("Symbol") or row.get("ProductCode") or "").upper()
+            if not row_symbol.startswith(symbol):
+                continue
+            instrument = str(row.get("InstrumentName") or "").upper()
+            if "OPT" in instrument:
+                continue
+            if instrument and "FUT" not in instrument:
+                continue
+            expiry_value = row.get("ExpiryDate")
+            expiry_dt = parse_expiry_date(str(expiry_value)) if expiry_value else None
+            if expiry_dt and expiry_dt.date() < today:
+                continue
+            if best_row is None:
+                best_row = row
+                best_expiry = expiry_dt
+                continue
+            if best_expiry is None and expiry_dt is not None:
+                best_row = row
+                best_expiry = expiry_dt
+                continue
+            if expiry_dt and best_expiry and expiry_dt < best_expiry:
+                best_row = row
+                best_expiry = expiry_dt
+        if best_row is not None:
+            return best_row
+    return None
 
 
 def mcx_quote_from_row(row: Dict[str, Any], name: str) -> Dict[str, Any]:

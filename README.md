@@ -40,6 +40,10 @@ If `expiry` is not provided, the app uses the first configured expiry for the sy
 
 The gold/silver ticker is embedded via TradingView widgets (client-side). No API keys are required.
 
+MCX metals cards use the MCX MarketWatch feed. You can control which symbols are used via:
+- `MCX_GOLD_SYMBOLS` (default `GOLDM,GOLD`)
+- `MCX_SILVER_SYMBOLS` (default `SILVERM,SILVER`)
+
 ## CapRover deploy
 
 1. Create a new app in CapRover.

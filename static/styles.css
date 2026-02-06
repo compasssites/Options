@@ -183,6 +183,8 @@ h2,
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(15, 44, 58, 0.12);
+  width: 100%;
+  height: 100%;
   justify-content: center;
 }
 
