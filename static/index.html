@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/static/styles.css?v=20260205i" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260205j" />
   </head>
   <body>
     <div class="background">
@@ -27,38 +27,42 @@
         <details class="ticker-toggle">
           <summary>Metals</summary>
           <div class="metals-row">
-            <div class="tradingview-widget-container tv-widget">
-              <div class="tradingview-widget-container__widget"></div>
-              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-              {
-                "symbol": "OANDA:XAUUSD",
-                "width": "240",
-                "height": "84",
-                "locale": "en",
-                "colorTheme": "light",
-                "isTransparent": true
-              }
-              </script>
+            <div class="metals-cell">
+              <div class="tradingview-widget-container tv-widget">
+                <div class="tradingview-widget-container__widget"></div>
+                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-ticker.js" async>
+                {
+                  "symbol": "OANDA:XAUUSD",
+                  "width": "240",
+                  "height": "84",
+                  "locale": "en",
+                  "colorTheme": "light",
+                  "isTransparent": true
+                }
+                </script>
+              </div>
             </div>
-            <div class="tradingview-widget-container tv-widget">
-              <div class="tradingview-widget-container__widget"></div>
-              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-              {
-                "symbol": "OANDA:XAGUSD",
-                "width": "240",
-                "height": "84",
-                "locale": "en",
-                "colorTheme": "light",
-                "isTransparent": true
-              }
-              </script>
+            <div class="metals-cell">
+              <div class="tradingview-widget-container tv-widget">
+                <div class="tradingview-widget-container__widget"></div>
+                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-ticker.js" async>
+                {
+                  "symbol": "OANDA:XAGUSD",
+                  "width": "240",
+                  "height": "84",
+                  "locale": "en",
+                  "colorTheme": "light",
+                  "isTransparent": true
+                }
+                </script>
+              </div>
             </div>
-            <div class="mcx-card">
+            <div class="metals-cell mcx-card">
               <span class="mcx-label">MCX Gold</span>
               <span class="mcx-price" id="mcxGoldPrice">--</span>
               <span class="mcx-change" id="mcxGoldChange">--%</span>
             </div>
-            <div class="mcx-card">
+            <div class="metals-cell mcx-card">
               <span class="mcx-label">MCX Silver</span>
               <span class="mcx-price" id="mcxSilverPrice">--</span>
               <span class="mcx-change" id="mcxSilverChange">--%</span>
@@ -146,6 +150,6 @@
       </section>
     </main>
 
-    <script src="/static/app.js?v=20260205i"></script>
+    <script src="/static/app.js?v=20260205j"></script>
   </body>
 </html>
