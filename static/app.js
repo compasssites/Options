@@ -249,7 +249,7 @@ function scheduleMcxMetals() {
   }
   mcxTimer = setInterval(() => {
     loadMcxMetals();
-  }, 60 * 1000);
+  }, 15 * 1000);
 }
 
 function updateTable(rows) {
