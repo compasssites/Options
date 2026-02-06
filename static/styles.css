@@ -102,7 +102,7 @@ h2,
   align-items: center;
   justify-content: flex-start;
   gap: 16px;
-  padding: 12px 18px;
+  padding: 16px 18px;
   border-radius: 18px;
   border: 1px solid var(--border);
   background: linear-gradient(120deg, rgba(255, 255, 255, 0.85), rgba(241, 247, 248, 0.9));
@@ -150,7 +150,7 @@ h2,
 
 .metals-cell {
   min-width: 0;
-  height: 100px;
+  height: 108px;
   display: flex;
   align-items: stretch;
 }
@@ -169,7 +169,7 @@ h2,
 }
 
 .tv-widget .tradingview-widget-container__widget {
-  min-height: 100px;
+  min-height: 108px;
   width: 100%;
 }
 
