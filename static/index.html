@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/static/styles.css?v=20260205f" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260205g" />
   </head>
   <body>
     <div class="background">
@@ -25,14 +25,14 @@
     <main class="shell">
       <section class="ticker-bar">
         <details class="ticker-toggle">
-          <summary>Metals (US)</summary>
+          <summary>Metals</summary>
           <div class="tv-ticker">
             <div class="tradingview-widget-container tv-widget">
               <div class="tradingview-widget-container__widget"></div>
               <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
               {
                 "symbol": "OANDA:XAUUSD",
-                "width": "140",
+                "width": "190",
                 "height": "50",
                 "locale": "en",
                 "colorTheme": "light",
@@ -45,7 +45,33 @@
               <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
               {
                 "symbol": "OANDA:XAGUSD",
-                "width": "140",
+                "width": "190",
+                "height": "50",
+                "locale": "en",
+                "colorTheme": "light",
+                "isTransparent": true
+              }
+              </script>
+            </div>
+            <div class="tradingview-widget-container tv-widget">
+              <div class="tradingview-widget-container__widget"></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+              {
+                "symbol": "MCX:GOLD1!",
+                "width": "190",
+                "height": "50",
+                "locale": "en",
+                "colorTheme": "light",
+                "isTransparent": true
+              }
+              </script>
+            </div>
+            <div class="tradingview-widget-container tv-widget">
+              <div class="tradingview-widget-container__widget"></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+              {
+                "symbol": "MCX:SILVER1!",
+                "width": "190",
                 "height": "50",
                 "locale": "en",
                 "colorTheme": "light",
@@ -55,14 +81,6 @@
             </div>
           </div>
         </details>
-        <div class="hero-status hero-status--tight">
-          <span class="dot"></span>
-          <span id="lastUpdated">Not fetched yet</span>
-          <span class="divider">•</span>
-          <span>Rows <strong id="rowCount">0</strong></span>
-          <span class="divider">•</span>
-          <span>Cache <strong id="cacheStatus">Idle</strong></span>
-        </div>
       </section>
 
       <section class="table-card">
@@ -119,10 +137,20 @@
           </div>
         </div>
         <div class="table-meta">
-          <label class="toggle inline">
-            <input id="autoRefresh" type="checkbox" checked />
-            <span>Auto refresh every 10 minutes</span>
-          </label>
+          <div class="meta-left">
+            <label class="toggle inline">
+              <input id="autoRefresh" type="checkbox" checked />
+              <span>Auto refresh every 10 minutes</span>
+            </label>
+            <div class="hero-status hero-status--inline">
+              <span class="dot"></span>
+              <span id="lastUpdated">Not fetched yet</span>
+              <span class="divider">•</span>
+              <span>Rows <strong id="rowCount">0</strong></span>
+              <span class="divider">•</span>
+              <span>Cache <strong id="cacheStatus">Idle</strong></span>
+            </div>
+          </div>
           <p id="status" class="status">Ready.</p>
         </div>
         <div class="table-wrap">
@@ -134,6 +162,6 @@
       </section>
     </main>
 
-    <script src="/static/app.js?v=20260205f"></script>
+    <script src="/static/app.js?v=20260205g"></script>
   </body>
 </html>
