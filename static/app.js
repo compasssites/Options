@@ -12,6 +12,10 @@ const ROW_COUNT = document.getElementById("rowCount");
 const CACHE_STATUS = document.getElementById("cacheStatus");
 const TABLE = document.getElementById("chainTable");
 const EXCHANGE_PILL = document.getElementById("exchangePill");
+const MCX_GOLD_PRICE = document.getElementById("mcxGoldPrice");
+const MCX_GOLD_CHANGE = document.getElementById("mcxGoldChange");
+const MCX_SILVER_PRICE = document.getElementById("mcxSilverPrice");
+const MCX_SILVER_CHANGE = document.getElementById("mcxSilverChange");
 
 const STRIKE_DEFAULTS = {
   NIFTY: "50",
@@ -48,6 +52,7 @@ const HEADERS = [
 let autoRefreshTimer = null;
 let tokenValue = "";
 let symbolSources = {};
+let mcxTimer = null;
 
 function setStatus(message, tone = "neutral") {
   STATUS.textContent = message;
@@ -194,6 +199,57 @@ function applyExchangePill(symbol) {
 function applySymbolDefaults(symbol) {
   applyStrikeStep(symbol);
   applyExchangePill(symbol);
+}
+
+function formatMcxValue(value) {
+  if (value === null || value === undefined || value === "") {
+    return "--";
+  }
+  const num = Number(value);
+  if (!Number.isFinite(num)) {
+    return String(value);
+  }
+  return num.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function updateMcxCard(item) {
+  const name = (item?.name || "").toLowerCase();
+  const isGold = name.includes("gold");
+  const priceEl = isGold ? MCX_GOLD_PRICE : MCX_SILVER_PRICE;
+  const changeEl = isGold ? MCX_GOLD_CHANGE : MCX_SILVER_CHANGE;
+  if (!priceEl || !changeEl) {
+    return;
+  }
+  priceEl.textContent = formatMcxValue(item?.last);
+  const pct = item?.change_pct ?? "";
+  changeEl.textContent = pct === "" ? "--%" : `${formatMcxValue(pct)}%`;
+  setPercentTone(changeEl, pct);
+}
+
+async function loadMcxMetals() {
+  try {
+    const data = await fetchJson("/api/mcx-metals");
+    const items = Array.isArray(data?.items) ? data.items : [];
+    items.forEach((item) => updateMcxCard(item));
+  } catch {
+    if (MCX_GOLD_CHANGE) {
+      MCX_GOLD_CHANGE.textContent = "--%";
+      MCX_GOLD_PRICE.textContent = "--";
+    }
+    if (MCX_SILVER_CHANGE) {
+      MCX_SILVER_CHANGE.textContent = "--%";
+      MCX_SILVER_PRICE.textContent = "--";
+    }
+  }
+}
+
+function scheduleMcxMetals() {
+  if (mcxTimer) {
+    clearInterval(mcxTimer);
+  }
+  mcxTimer = setInterval(() => {
+    loadMcxMetals();
+  }, 60 * 1000);
 }
 
 function updateTable(rows) {
@@ -372,6 +428,8 @@ window.addEventListener("load", async () => {
     await loadExpiries(selected);
   }
   scheduleAutoRefresh();
+  loadMcxMetals();
+  scheduleMcxMetals();
 });
 
 if ("serviceWorker" in navigator) {

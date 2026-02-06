@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/static/styles.css?v=20260205g" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260205h" />
   </head>
   <body>
     <div class="background">
@@ -32,8 +32,8 @@
               <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
               {
                 "symbol": "OANDA:XAUUSD",
-                "width": "190",
-                "height": "50",
+                "width": "220",
+                "height": "70",
                 "locale": "en",
                 "colorTheme": "light",
                 "isTransparent": true
@@ -45,39 +45,25 @@
               <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
               {
                 "symbol": "OANDA:XAGUSD",
-                "width": "190",
-                "height": "50",
+                "width": "220",
+                "height": "70",
                 "locale": "en",
                 "colorTheme": "light",
                 "isTransparent": true
               }
               </script>
             </div>
-            <div class="tradingview-widget-container tv-widget">
-              <div class="tradingview-widget-container__widget"></div>
-              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-              {
-                "symbol": "MCX:GOLD1!",
-                "width": "190",
-                "height": "50",
-                "locale": "en",
-                "colorTheme": "light",
-                "isTransparent": true
-              }
-              </script>
+          </div>
+          <div class="mcx-ticker">
+            <div class="mcx-card">
+              <span class="mcx-label">MCX Gold</span>
+              <span class="mcx-price" id="mcxGoldPrice">--</span>
+              <span class="mcx-change" id="mcxGoldChange">--%</span>
             </div>
-            <div class="tradingview-widget-container tv-widget">
-              <div class="tradingview-widget-container__widget"></div>
-              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-              {
-                "symbol": "MCX:SILVER1!",
-                "width": "190",
-                "height": "50",
-                "locale": "en",
-                "colorTheme": "light",
-                "isTransparent": true
-              }
-              </script>
+            <div class="mcx-card">
+              <span class="mcx-label">MCX Silver</span>
+              <span class="mcx-price" id="mcxSilverPrice">--</span>
+              <span class="mcx-change" id="mcxSilverChange">--%</span>
             </div>
           </div>
         </details>
@@ -162,6 +148,6 @@
       </section>
     </main>
 
-    <script src="/static/app.js?v=20260205g"></script>
+    <script src="/static/app.js?v=20260205h"></script>
   </body>
 </html>

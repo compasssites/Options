@@ -138,6 +138,22 @@ def health() -> Dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/api/mcx-metals")
+def mcx_metals(token: Optional[str] = None, x_api_token: Optional[str] = Header(None)) -> Dict[str, Any]:
+    check_token(token, x_api_token)
+    rows = get_marketwatch_rows()
+    gold_row = pick_mcx_future(rows, "GOLD")
+    silver_row = pick_mcx_future(rows, "SILVER")
+    items = []
+    if gold_row:
+        items.append(mcx_quote_from_row(gold_row, "MCX Gold"))
+    if silver_row:
+        items.append(mcx_quote_from_row(silver_row, "MCX Silver"))
+    fetched_at = MARKETWATCH_CACHE.get("fetched_at", time.time())
+    last_updated = datetime.fromtimestamp(fetched_at, tz=IST).isoformat(sep=" ", timespec="seconds")
+    return {"last_updated": last_updated, "items": items}
+
+
 @app.get("/api/symbols")
 def symbols(token: Optional[str] = None, x_api_token: Optional[str] = Header(None)) -> Dict[str, Any]:
     check_token(token, x_api_token)
@@ -855,6 +871,56 @@ def parse_expiry_date(value: str) -> Optional[datetime]:
         return datetime.strptime(value.upper(), "%d%b%Y")
     except ValueError:
         return None
+
+
+def pick_mcx_future(rows: List[Dict[str, Any]], symbol: str) -> Optional[Dict[str, Any]]:
+    today = datetime.now(tz=IST).date()
+    symbol = symbol.upper().strip()
+    best_row: Optional[Dict[str, Any]] = None
+    best_expiry: Optional[datetime] = None
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        row_symbol = str(row.get("Symbol") or row.get("ProductCode") or "").upper()
+        if row_symbol != symbol:
+            continue
+        instrument = str(row.get("InstrumentName") or "").upper()
+        if instrument and "FUT" not in instrument:
+            continue
+        expiry_value = row.get("ExpiryDate")
+        expiry_dt = parse_expiry_date(str(expiry_value)) if expiry_value else None
+        if expiry_dt and expiry_dt.date() < today:
+            continue
+        if best_row is None:
+            best_row = row
+            best_expiry = expiry_dt
+            continue
+        if best_expiry is None and expiry_dt is not None:
+            best_row = row
+            best_expiry = expiry_dt
+            continue
+        if expiry_dt and best_expiry and expiry_dt < best_expiry:
+            best_row = row
+            best_expiry = expiry_dt
+    return best_row
+
+
+def mcx_quote_from_row(row: Dict[str, Any], name: str) -> Dict[str, Any]:
+    ltp = to_float(row.get("LTP") or row.get("Last"))
+    abs_chg = to_float(row.get("AbsoluteChange") or row.get("NetChange") or row.get("Change"))
+    pct = to_float(row.get("PercentChange") or row.get("PercChange") or row.get("ChangePercent"))
+    if pct is None and ltp is not None and abs_chg is not None:
+        prev = ltp - abs_chg
+        if prev:
+            pct = (abs_chg / prev) * 100
+    return {
+        "name": name,
+        "last": format_number(ltp, 2),
+        "change": format_number(abs_chg, 2),
+        "change_pct": format_number(pct, 2),
+        "unit": row.get("PriceUnit", "INR"),
+        "last_update": row.get("LastUpdate", ""),
+    }
 
 
 def get_mcx_expiries(symbol: str) -> List[str]:

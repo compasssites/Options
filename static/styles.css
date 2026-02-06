@@ -160,7 +160,46 @@ h2,
 }
 
 .tv-widget .tradingview-widget-container__widget {
-  min-height: 50px;
+  min-height: 70px;
+}
+
+.mcx-ticker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.mcx-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(15, 44, 58, 0.12);
+  min-width: 150px;
+}
+
+.mcx-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.mcx-price {
+  font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.mcx-change {
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .meta-left {
@@ -433,6 +472,18 @@ h1 {
 }
 
 #chainTable td.pct-col[data-tone="flat"] {
+  color: var(--muted);
+}
+
+.mcx-change[data-tone="up"] {
+  color: #1b7a4b;
+}
+
+.mcx-change[data-tone="down"] {
+  color: #b03a2e;
+}
+
+.mcx-change[data-tone="flat"] {
   color: var(--muted);
 }
 
