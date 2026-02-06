@@ -885,6 +885,8 @@ def pick_mcx_future(rows: List[Dict[str, Any]], symbols: Tuple[str, ...]) -> Opt
         if not any(row_symbol.startswith(sym) for sym in symbols):
             continue
         instrument = str(row.get("InstrumentName") or "").upper()
+        if "OPT" in instrument:
+            continue
         if instrument and "FUT" not in instrument:
             continue
         expiry_value = row.get("ExpiryDate")
