@@ -359,13 +359,15 @@ function exportCsv() {
   window.open(url, "_blank");
 }
 
-async function copyLink() {
-  const params = buildParams({ format: "json", pretty: "1", as_text: "1", window: "60" });
-  const url = `${window.location.origin}/api/option-chain?${toQuery(params)}`;
+async function copyLink(event) {
+  const force = event && event.shiftKey ? "true" : undefined;
+  const params = buildParams({ format: "lines", window: "25", force });
+  const url = `${window.location.origin}/api/option-chain-lite?${toQuery(params)}`;
+  const msg = force ? "ChatGPT link copied (fresh)." : "ChatGPT link copied (cached).";
   try {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(url);
-      setStatus("Pretty JSON link copied.");
+      setStatus(msg);
       return;
     }
     const textarea = document.createElement("textarea");
@@ -378,7 +380,7 @@ async function copyLink() {
     const ok = document.execCommand("copy");
     document.body.removeChild(textarea);
     if (ok) {
-      setStatus("Pretty JSON link copied.");
+      setStatus(msg);
       return;
     }
     throw new Error("Clipboard blocked");
