@@ -75,6 +75,8 @@ The only approved way to commit is:
 
 It stages, refuses to proceed if a staged file looks like a secret, runs the project check, commits, and pushes as a single tool call, so it costs one approval instead of three. With no file list it stages everything.
 
+In a Codex session the workspace sandbox refuses writes to `.git`, so the first attempt fails on `index.lock` and the wrapper has to be re-run escalated. Ask for the elevated run with the first call rather than letting it fail and retrying — it is one approval either way, and the failed attempt is pure waste. This is an upstream Codex limitation, not a Compass one, and it applies even in a trusted project.
+
 Do not run `git add`, `git commit`, or `git push` separately. They still work and still prompt; they are just three interruptions instead of one. Force-push and `reset --hard` are denied outright.
 
 ## No browser or visual testing
