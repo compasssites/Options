@@ -1,0 +1,75 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(wrangler dns:*)",
+      "Bash(wrangler zone:*)",
+      "Bash(wrangler d1 delete:*)",
+      "Bash(wrangler r2 bucket delete:*)",
+      "Bash(wrangler kv namespace delete:*)",
+      "Bash(wrangler pages project delete:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(npx playwright:*)",
+      "Bash(playwright:*)",
+      "Bash(npx puppeteer:*)",
+      "Bash(npx cypress:*)",
+      "Bash(cypress:*)",
+      "Bash(chrome-headless-shell:*)",
+      "Bash(chromedriver:*)"
+    ],
+    "ask": [
+      "Bash(/Users/macpro/CompassAgentMemory/bin/compass-ship:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(wrangler deploy:*)",
+      "Bash(wrangler publish:*)",
+      "Bash(wrangler pages deploy:*)",
+      "Bash(wrangler d1 migrations apply:*)",
+      "Bash(wrangler d1 execute:*)",
+      "Bash(wrangler secret:*)",
+      "Bash(wrangler r2 object:*)",
+      "Bash(wrangler kv key:*)",
+      "Task",
+      "Agent"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /Users/macpro/CompassAgentMemory/bin/compass-guard.mjs",
+            "timeout": 10,
+            "statusMessage": "Compass guard"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /Users/macpro/CompassAgentMemory/bin/compass-reap.mjs",
+            "timeout": 15,
+            "statusMessage": "Reaping stray processes"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /Users/macpro/CompassAgentMemory/bin/compass-reap.mjs",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
