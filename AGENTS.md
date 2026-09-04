@@ -29,6 +29,17 @@
 - Final message under 150 words for ordinary tasks: what changed, what was verified, what is left. Do not restate the diff. Write a `plans/` file only for work spanning sessions.
 - Stop when the requested result is implemented, checks pass, and it is shipped. Do not add optional audits, deployment polling, or status checks.
 
+## Finding the code — search, don't survey
+
+Broad exploration is an escalation, not the opening move.
+
+- Start from the literals in the request: the visible UI string, route, field, table, endpoint or error message. For "change Amount Payable to Net Payout", the first action is `rg -n "Amount Payable" src`, not reading the payout module.
+- Budget for an ordinary fix: about three targeted searches and six files opened. Crossing it is fine when the task genuinely spans modules — say so in one line and carry on.
+- Once you can name the input, the processing and the output for the change, stop looking and implement. Read analogous code only when an existing convention is genuinely unclear.
+- Read the Feature Map in the Project section before searching. If it is missing or wrong for an area you just worked in, fix it in the same turn.
+- Scratch files, exports, dumps, SQL experiments and debugging artifacts go in `.agent-tmp/` and nowhere else. Delete the ones you created when the task ends.
+- Delete only files you created in this task. Never delete a pre-existing untracked file because it looks unused; mention it instead.
+
 ## Load a skill instead of carrying the knowledge
 
 Long knowledge lives in skills, not in this file. Load the skill when the task calls for it:
